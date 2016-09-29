@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libavg_cefhelper", "libavg_cefhelper\libavg_cefhelper.vcxproj", "{80360B7D-EF41-41B3-B739-0CFAC640CB92}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cefplugin", "cefplugin\cefplugin.vcxproj", "{E59B819E-9EF5-4A7E-B194-145E12081963}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{80360B7D-EF41-41B3-B739-0CFAC640CB92}.Debug|Win32.ActiveCfg = Release|Win32
+		{80360B7D-EF41-41B3-B739-0CFAC640CB92}.Debug|Win32.Build.0 = Release|Win32
+		{80360B7D-EF41-41B3-B739-0CFAC640CB92}.Release|Win32.ActiveCfg = Release|Win32
+		{80360B7D-EF41-41B3-B739-0CFAC640CB92}.Release|Win32.Build.0 = Release|Win32
+		{E59B819E-9EF5-4A7E-B194-145E12081963}.Debug|Win32.ActiveCfg = Release|Win32
+		{E59B819E-9EF5-4A7E-B194-145E12081963}.Debug|Win32.Build.0 = Release|Win32
+		{E59B819E-9EF5-4A7E-B194-145E12081963}.Release|Win32.ActiveCfg = Release|Win32
+		{E59B819E-9EF5-4A7E-B194-145E12081963}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
