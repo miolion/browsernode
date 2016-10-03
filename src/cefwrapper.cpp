@@ -30,7 +30,7 @@ void CEFApp::OnWebKitInitialized()
 		"		avg.send = function(cmd, data)"
 		"			{"
 		"				native function send(cmd, data);"
-		"				return send(cmd, data);" 
+		"				return send(cmd, data);"
 		"			};"
 		"	}"
 		")();";
@@ -65,7 +65,7 @@ bool CEFApp::Execute(
 
 		m->GetArgumentList()->SetString( 0, arguments[1]->GetStringValue() );
 
-		CefV8Context::GetCurrentContext()->GetBrowser()->SendProcessMessage( 
+		CefV8Context::GetCurrentContext()->GetBrowser()->SendProcessMessage(
 			PID_BROWSER, m );
 
 		return true;
@@ -93,11 +93,11 @@ void CEFWrapper::AVGRenderHandler::Resize( glm::uvec2 size )
 
 	// Only way to resize bitmap is to recreate it.
 	// shared_ptr should make sure there is no leak.
-	mRenderBitmap = avg::BitmapPtr( 
+	mRenderBitmap = avg::BitmapPtr(
 		new avg::Bitmap( glm::vec2((float)size.x, (float)size.y), avg::B8G8R8A8 ) );
 }
 
-bool CEFWrapper::AVGRenderHandler::GetViewRect( 
+bool CEFWrapper::AVGRenderHandler::GetViewRect(
 	CefRefPtr<CefBrowser> browser, CefRect &rect )
 {
 	rect = CefRect( 0, 0, mSize.x, mSize.y );
@@ -131,14 +131,14 @@ CEFWrapper::CEFWrapper( glm::uvec2 res )
 {
 
 	CefWindowInfo windowinfo;
-	windowinfo.SetAsWindowless( nullptr, true );
+	windowinfo.SetAsWindowless( 0, true );
 
 	CefBrowserSettings browsersettings;
 	browsersettings.windowless_frame_rate = 60;
 
 	mRenderHandler = new AVGRenderHandler( res );
 
-	mBrowser = CefBrowserHost::CreateBrowserSync( 
+	mBrowser = CefBrowserHost::CreateBrowserSync(
 		windowinfo, this, "",
 		browsersettings, nullptr );
 }
@@ -209,7 +209,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 				//std::cout << "move" << std::endl;
 				mBrowser->GetHost()->SendMouseMoveEvent( cefevent, false );
 			}
-			else 
+			else
 			{
 				//std::cout << "click" << std::endl;
 				bool mouseUp = mouse->getType() == Event::CURSOR_UP;
@@ -233,7 +233,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 			mBrowser->GetHost()->SendMouseMoveEvent( evt, false );
 		}
 		break;
-		
+
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
 		{
@@ -242,7 +242,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 			evt.y = ev.button.y;
 
 			bool mouseUp = ev.button.state == 0;
-			CefBrowserHost::MouseButtonType btntype = 
+			CefBrowserHost::MouseButtonType btntype =
 				static_cast<CefBrowserHost::MouseButtonType>( ev.button.button - 1 );
 
 			mBrowser->GetHost()->
@@ -293,7 +293,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 			int charCode = ev.key.keysym.sym;
 
 			bool isChar = false;
-			if( (charCode >= SDLK_a && charCode <= SDLK_z) || 
+			if( (charCode >= SDLK_a && charCode <= SDLK_z) ||
 				(charCode >= SDLK_0 && charCode <= SDLK_9) )
 			{
 				isChar = true;
@@ -421,7 +421,7 @@ void CEFWrapper::Cleanup()
 	CefShutdown();
 }
 
-void CEFWrapper::AddClickCallback( 
+void CEFWrapper::AddClickCallback(
 	std::string domid, ClickCB cb, void* userdata )
 {
 	mClickCBs[domid] = std::make_pair( cb, userdata );

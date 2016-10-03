@@ -24,14 +24,14 @@ os.environ['AVG_LOG_CATEGORIES']="""APP:DBG CONFIG:DBG DEPREC:DBG EVENTS:DBG
 
 class MyMainDiv(app.MainDiv):
     def onInit(self):
-        player.loadPlugin("CEFplugin")
-        node = CEFplugin.CEFnode(size=self.size, id="cef", parent=self)
+        player.loadPlugin("libavg_cefplugin")
+        node = libavg_cefplugin.CEFnode(size=self.size, id="cef", parent=self)
         #node2 = CEFplugin.CEFnode(fillcolor="aa0000", id="cefb", parent=self)
         #node3 = CEFplugin.CEFnode(fillcolor="00ab0a", id="cefc", parent=self)
         #root.appendChild(node)
         #self.BrowserNode( parent=self )
         pass
-    
+
     def onExit(self):
         print( "exiting" );
         pass
@@ -40,4 +40,4 @@ class MyMainDiv(app.MainDiv):
         pass
 
 print player.pluginPath;
-app.App().run(MyMainDiv(), app_resolution='1024x600')
+app.App().run(MyMainDiv(), app_resolution='1920x1080')

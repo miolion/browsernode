@@ -7,14 +7,16 @@ using namespace boost::python;
 namespace avg
 {
 
+///*****************************************************************************
+/// CEFNode
 CEFNode::CEFNode(const ArgList& Args)
 	: RasterNode( "Node" ), CEFWrapper( glm::uvec2( getWidth(), getHeight() ) ),
 	m_Transparent( false )
 {
-	// Must set blendMode directly, otherwise crashes with unknown blendmode.
+	// Must set blendMode directly, otherwise crashes because unknown blendmode.
 	RasterNode::setBlendModeStr("blend");
 
-    Args.setMembers(this);
+	Args.setMembers(this);
 
 	Player::get()->registerPreRenderListener(this);
 
@@ -26,30 +28,6 @@ CEFNode::~CEFNode()
 {
 	std::cout << "Destructor" << std::endl;
 	Player::get()->unregisterPreRenderListener(this);
-}
-
-bool CEFNode::getTransparent() const
-{
-    return m_Transparent;
-}
-
-void CEFNode::setTransparent(bool trans)
-{
-    m_Transparent = trans;
-}
-
-
-char CEFNodeName[] = "CEFnode";
-
-void CEFNode::registerType()
-{
-    avg::TypeDefinition def = avg::TypeDefinition("CEFnode", "rasternode", 
-            ExportedObject::buildObject<CEFNode>)
-        .addArg(Arg<bool>("transparent", false, false,
-                offsetof(CEFNode, m_Transparent)));
-
-    const char* allowedParentNodeNames[] = {"avg", "div", 0};
-    avg::TypeRegistry::get()->registerType(def, allowedParentNodeNames);
 }
 
 void CEFNode::connectDisplay()
@@ -105,7 +83,7 @@ void CEFNode::createSurface()
 	IntPoint size(getWidth(), getHeight());
 
 	PixelFormat pf = B8G8R8A8;
-	m_pTexture = GLContextManager::get()->createTexture(size, pf, false); 
+	m_pTexture = GLContextManager::get()->createTexture(size, pf, false);
 	getSurface()->create(pf, m_pTexture);
 
 	newSurface();
@@ -117,7 +95,7 @@ void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
 	//std::cout << "prerender" << std::endl;
 	if (!m_SurfaceCreated || getSize() != m_LastSize)
 	{
-		std::cout << "prerender - recreate with x" 
+		std::cout << "prerender - recreate with x"
 			<< getSize().x << " y" << getSize().y <<  std::endl;
 		if( getSize().x < 1 || getSize().y < 1 )
 		{
@@ -127,12 +105,12 @@ void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
         setViewport(-32767, -32767, -32767, -32767);
         m_SurfaceCreated = true;
         m_LastSize = getSize();
-        
+
         Resize( glm::uvec2(getWidth(), getHeight()));
-        
+
 		IntPoint size(getWidth(), getHeight());
         PixelFormat pf = B8G8R8A8;
-        m_pTexture = GLContextManager::get()->createTexture(size, pf, false); 
+        m_pTexture = GLContextManager::get()->createTexture(size, pf, false);
         getSurface()->create(pf, m_pTexture);
     }
 
@@ -142,7 +120,7 @@ void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
 	{
 		ScheduleTexUpload(m_pTexture);
 		scheduleFXRender();
-    }    
+    }
 
     calcVertexArray(pVA);
 }
@@ -153,7 +131,8 @@ void CEFNode::render(GLContext* context, const glm::mat4& transform)
 {
 	//std::cout << "Render" << std::endl;
     ScopeTimer Timer(pzid);
-    blt32(context, transform);// getSize(), getEffectiveOpacity(), getBlendMode());
+    blt32(context, transform);
+	// getSize(), getEffectiveOpacity(), getBlendMode());
 }
 
 void CEFNode::onPreRender()
@@ -174,6 +153,33 @@ bool CEFNode::handleEvent(EventPtr ev)
 	return RasterNode::handleEvent( ev );
 }
 
+///*****************************************************************************
+/// CEFNodeAPI
+
+char CEFNodeName[] = "CEFnode";
+
+bool CEFNode::getTransparent() const
+{
+    return m_Transparent;
+}
+
+void CEFNode::setTransparent(bool trans)
+{
+    m_Transparent = trans;
+}
+
+void CEFNode::registerType()
+{
+    avg::TypeDefinition def = avg::TypeDefinition("CEFnode", "rasternode",
+            ExportedObject::buildObject<CEFNode>)
+        .addArg(Arg<bool>("transparent", false, false,
+                offsetof(CEFNode, m_Transparent)));
+		//.addArg();
+
+    const char* allowedParentNodeNames[] = {"avg", "div", 0};
+    avg::TypeRegistry::get()->registerType(def, allowedParentNodeNames);
+}
+
 } // namespace avg
 
 using namespace avg;
@@ -192,7 +198,7 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 	// The subprocesses are started by CefInitialize.
 
 #ifndef _WIN32
-	CefMainArgs args(argc, argv);
+	CefMainArgs args( 0, nullptr ); //argc, argv);
 #else
 	// On windows, argc/argv constructor is not supported.
 	CefMainArgs args(GetModuleHandle(nullptr));
@@ -201,14 +207,17 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 	CefRefPtr< CEFApp > app = new CEFApp();
 
 	CefSettings settings;
-	settings.log_severity = LOGSEVERITY_VERBOSE;
 	settings.remote_debugging_port = 8088;
 
 	settings.no_sandbox = 1;
 	settings.windowless_rendering_enabled = 1;
 
 	// Specify the path for the sub-process executable.
+#ifdef _WIN32
 	CefString(&settings.browser_subprocess_path).FromASCII("libavg_cefhelper.exe");
+#else
+	CefString(&settings.browser_subprocess_path).FromASCII("./avg_cefhelper");
+#endif
 
 	// Initialize CEF in the main process.
 	CefInitialize(args, settings, app.get(), nullptr);
@@ -224,4 +233,3 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 
     return pyCEFModule;
 }
-

@@ -31,11 +31,11 @@ public:
 
 	/*! \brief Binds JS extensions.
 		* Inherited from CefRenderProcessHandler. */
-	void OnWebKitInitialized();	
+	void OnWebKitInitialized();
 
 	/*! \brief Executes native implemented JS functions.
 		* Inherited from CefV8Handler. */
-	bool Execute( 
+	bool Execute(
 		const CefString& name,
 		CefRefPtr< CefV8Value > object,
 		const CefV8ValueList& arguments,
@@ -48,15 +48,15 @@ public:
 
 #ifndef CEF_APP_ONLY
 } // namespace avg
-#include <avg/glm/glm.hpp>
+#include <glm/glm.hpp>
 
-#include <avg/player/Player.h>
-#include <avg/player/OGLSurface.h>
-#include <avg/player/MouseEvent.h>
+#include <player/Player.h>
+#include <player/OGLSurface.h>
+#include <player/MouseEvent.h>
 
-#include <avg/graphics/GLContextManager.h>
-#include <avg/graphics/OGLHelper.h>
-#include <avg/graphics/Bitmap.h>
+#include <graphics/GLContextManager.h>
+#include <graphics/OGLHelper.h>
+#include <graphics/Bitmap.h>
 
 namespace avg
 {
@@ -137,7 +137,7 @@ public:
 	void RemoveClickCallback( std::string DOMid );
 
 	/*! \brief Used to receive data from sunshine.send in JS.
-	 * \param cmd Command name to forward. 
+	 * \param cmd Command name to forward.
 	 * When sunshine.send is called with cmd param == cmd then the data param
 	 * is forwarded along with the userdata to the given callback function. */
 	void AddGenericCallback( std::string cmd, GenericCB callback, void* userdata );
@@ -165,7 +165,7 @@ public:
 		return this;
 	}
 
-	bool OnProcessMessageReceived( 
+	bool OnProcessMessageReceived(
 		CefRefPtr< CefBrowser > browser,
 		CefProcessId source_process,
 		CefRefPtr< CefProcessMessage > message );
