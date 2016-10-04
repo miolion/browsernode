@@ -1,0 +1,32 @@
+To install this library you are going to need latest libavg and latest
+Chromium Embedded Framework compiled.
+
+The project uses a cmake build system. It is recommended to use cmake-gui
+as you are required to manually set CMAKE paths to libavg and cef directories.
+
+On windows, the usage of the libavg prebuilt dependency package is advised.
+
+
+The process after having libavg and CEF built is as follows:
+
+run cmake-gui, choose your designated compiler, run configure.
+
+You will probably see a lot of red lines in the cefgui interface.
+Every line should have a sensible name, and a tooltip that tells you
+what does it want in the given position.
+
+Fill all the red values, then hit configure - Repeat until no red lines appear
+and no errors show up in the log.
+
+Hit Generate.
+
+After this you can find project files in your designated binary directory.
+
+All the resource files used by CEF, along with a test python file are included
+in the designated release directory.
+On unix a copy of your python2.7 is also generated, as its necessary as
+otherwise CEF would look for dependencies in /usr/bin/
+
+You can run the test with
+"./mypy testapp.py" on unix
+"python testapp.py" on windows

@@ -48,11 +48,15 @@ public:
 
 #ifndef CEF_APP_ONLY
 } // namespace avg
+
+#include <SDL2/SDL_keycode.h>
 #include <glm/glm.hpp>
 
 #include <player/Player.h>
 #include <player/OGLSurface.h>
 #include <player/MouseEvent.h>
+#include <player/MouseWheelEvent.h>
+#include <player/KeyEvent.h>
 
 #include <graphics/GLContextManager.h>
 #include <graphics/OGLHelper.h>
@@ -115,8 +119,16 @@ private:
 
 	CefRefPtr<AVGRenderHandler> mRenderHandler;
 
+	bool m_KeyboardInput;
+	bool m_MouseInput;
+
 public:
-	CEFWrapper( glm::uvec2 res );
+	CEFWrapper();
+
+	void Init( glm::uvec2 res, bool transparent );
+
+	void SetKBInput(bool kb){ m_KeyboardInput = kb; }
+	void SetMouseInput(bool mouse){ m_MouseInput = mouse; }
 
 	void LoadURL( std::string url );
 	void Update();

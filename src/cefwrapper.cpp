@@ -94,7 +94,8 @@ void CEFWrapper::AVGRenderHandler::Resize( glm::uvec2 size )
 	// Only way to resize bitmap is to recreate it.
 	// shared_ptr should make sure there is no leak.
 	mRenderBitmap = avg::BitmapPtr(
-		new avg::Bitmap( glm::vec2((float)size.x, (float)size.y), avg::B8G8R8A8 ) );
+		new avg::Bitmap( glm::vec2((float)size.x, (float)size.y),
+			avg::B8G8R8A8 ) );
 }
 
 bool CEFWrapper::AVGRenderHandler::GetViewRect(
@@ -127,11 +128,14 @@ void CEFWrapper::AVGRenderHandler::ScheduleTexUpload( avg::MCTexturePtr texture 
 }
 
 
-CEFWrapper::CEFWrapper( glm::uvec2 res )
+CEFWrapper::CEFWrapper()
 {
+}
 
+void CEFWrapper::Init( glm::uvec2 res, bool transparent )
+{
 	CefWindowInfo windowinfo;
-	windowinfo.SetAsWindowless( 0, true );
+	windowinfo.SetAsWindowless( 0, transparent );
 
 	CefBrowserSettings browsersettings;
 	browsersettings.windowless_frame_rate = 60;
@@ -166,22 +170,18 @@ void CEFWrapper::Resize( glm::uvec2 size )
 
 void CEFWrapper::ProcessEvent( EventPtr ev )
 {
-	//std::cout << "Processing event" << std::endl;
-	if( MouseEventPtr mouse = boost::dynamic_pointer_cast<MouseEvent>(ev) )
+	MouseEventPtr mouse = boost::dynamic_pointer_cast<MouseEvent>(ev);
+	MouseWheelEventPtr wheel = boost::dynamic_pointer_cast<MouseWheelEvent>(ev);
+	KeyEventPtr key = boost::dynamic_pointer_cast<KeyEvent>(ev);
+
+	if( m_MouseInput && mouse )
 	{
-		//std::cout << "processing mouse event" << std::endl;
 		glm::vec2 coords = mouse->getPos();
-        /*std::vector<NodePtr> vector = getParentChain();
-        for (unsigned int i = 0; i < vector.size(); i++)
-		{
-            coords = vector[i]->toLocal(coords);
-        }*/
 
 		CefMouseEvent cefevent;
 		cefevent.x = (int)coords.x;
 		cefevent.y = (int)coords.y;
 
-		int wheel = 0;
 		CefBrowserHost::MouseButtonType btntype;
 		switch( mouse->getButton() )
 		{
@@ -196,28 +196,80 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 			break;
 		}
 
-		if( wheel )
+		if( mouse->getType() == Event::CURSOR_MOTION )
 		{
-			//std::cout << "wheel" << std::endl;
-			wheel *= 40;
-			mBrowser->GetHost()->SendMouseWheelEvent( cefevent, wheel, wheel );
+			mBrowser->GetHost()->SendMouseMoveEvent( cefevent, false );
 		}
 		else
 		{
-			if( mouse->getType() == Event::CURSOR_MOTION )
-			{
-				//std::cout << "move" << std::endl;
-				mBrowser->GetHost()->SendMouseMoveEvent( cefevent, false );
-			}
-			else
-			{
-				//std::cout << "click" << std::endl;
-				bool mouseUp = mouse->getType() == Event::CURSOR_UP;
-				mBrowser->GetHost()->
-					SendMouseClickEvent( cefevent, btntype, mouseUp, 1 );
-			}
+			std::cout << "click" << btntype << std::endl;
+			bool mouseUp = mouse->getType() == Event::CURSOR_UP;
+			mBrowser->GetHost()->
+				SendMouseClickEvent( cefevent, btntype, mouseUp, 1 );
 		}
-	} // If mouseevent
+	} // if mouseevent
+
+	if( m_MouseInput && wheel )
+	{
+		CefMouseEvent cefevent;
+		glm::vec2 pos = wheel->getPos();
+		cefevent.x = pos.x;
+		cefevent.y = pos.y;
+
+		glm::vec2 motion = wheel->getMotion() * 40.0f;
+		mBrowser->GetHost()->SendMouseWheelEvent(cefevent, motion.x, motion.y);
+	} // if wheelevent
+
+	//std::cout << "kb:" << m_KeyboardInput << std::endl;
+
+	if( m_KeyboardInput && key )
+	{
+		std::cout << "Keypress Text:";
+		std::cout << key->getText() << std::endl;
+		CefKeyEvent evt;
+		evt.type = (key->getType() == Event::KEY_DOWN)
+						? KEYEVENT_KEYDOWN : KEYEVENT_KEYUP;
+
+		int mod = key->getModifiers();
+		bool shift = (mod & KMOD_SHIFT) != 0;
+		bool ctrl = (mod & KMOD_CTRL) != 0;
+		bool alt = (mod & KMOD_ALT) != 0;
+		bool num_lock = !(mod & KMOD_NUM);
+		bool caps_lock = (mod & KMOD_CAPS) != 0;
+
+		int modifiers = 0;
+		if( shift )
+			modifiers += EVENTFLAG_SHIFT_DOWN;
+
+		if( ctrl )
+			modifiers += EVENTFLAG_CONTROL_DOWN;
+
+		if( alt )
+			modifiers += EVENTFLAG_ALT_DOWN;
+
+		if( num_lock )
+			modifiers += EVENTFLAG_NUM_LOCK_ON;
+
+		if( caps_lock )
+			modifiers += EVENTFLAG_CAPS_LOCK_ON;
+
+		evt.modifiers = modifiers;
+
+		UTF8String text = key->getText();
+		if( text.size() )//isChar && evt.type == KEYEVENT_KEYDOWN )
+		{
+			evt.type = KEYEVENT_CHAR;
+			evt.character = text[0];
+			//evt.windows_key_code = charCode;
+		}
+		else
+		{
+			evt.native_key_code = key->getScanCode();
+			//evt.windows_key_code = keyCode;
+		}
+
+		mBrowser->GetHost()->SendKeyEvent( evt );
+	}
 }
 
 /*void CEFWrapper::ProcessEvent( SDL_Event& ev )

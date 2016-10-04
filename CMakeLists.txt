@@ -122,9 +122,9 @@ if(NOT PLATFORM_WINDOWS)
   # Creating a hard link to python2.7.
   # This is necessary because unix CEF loads dependencies from binary folder
   # Which would be /usr/bin, which is not acceptable.
-  message( STATUS "Creating hard link /usr/bin/python2.7 ${RELEASE_DIR}/mypy.")
+  message( STATUS "Creating copy of /usr/bin/python2.7 : ${RELEASE_DIR}/mypy.")
   execute_process(
-    COMMAND ln /usr/bin/python2.7 ${RELEASE_DIR}/mypy
+    COMMAND cp /usr/bin/python2.7 ${RELEASE_DIR}/mypy
     OUTPUT_VARIABLE MYERR
   )
   message( STATUS ${MYERR} )

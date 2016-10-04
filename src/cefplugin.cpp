@@ -10,8 +10,8 @@ namespace avg
 ///*****************************************************************************
 /// CEFNode
 CEFNode::CEFNode(const ArgList& Args)
-	: RasterNode( "Node" ), CEFWrapper( glm::uvec2( getWidth(), getHeight() ) ),
-	m_Transparent( false )
+	: RasterNode( "Node" ),
+	m_Transparent( false ), m_KeyboardInput( false ), m_MouseInput( false )
 {
 	// Must set blendMode directly, otherwise crashes because unknown blendmode.
 	RasterNode::setBlendModeStr("blend");
@@ -20,8 +20,10 @@ CEFNode::CEFNode(const ArgList& Args)
 
 	Player::get()->registerPreRenderListener(this);
 
-	// Load youtube so we can test video playback.
-	LoadURL( "https://www.youtube.com/" );
+	CEFWrapper::Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
+
+	SetKBInput( m_KeyboardInput );
+	SetMouseInput( m_MouseInput );
 }
 
 CEFNode::~CEFNode()
@@ -145,9 +147,26 @@ bool CEFNode::getTransparent() const
     return m_Transparent;
 }
 
-void CEFNode::setTransparent(bool trans)
+bool CEFNode::getKeyboardInput() const
 {
-    m_Transparent = trans;
+	return m_KeyboardInput;
+}
+
+void CEFNode::setKeyboardInput(bool keyb)
+{
+	SetKBInput( keyb );
+	m_KeyboardInput = keyb;
+}
+
+bool CEFNode::getMouseInput() const
+{
+	return m_MouseInput;
+}
+
+void CEFNode::setMouseInput(bool mouse)
+{
+	SetMouseInput( mouse );
+	m_MouseInput = mouse;
 }
 
 void CEFNode::registerType()
@@ -155,8 +174,11 @@ void CEFNode::registerType()
     avg::TypeDefinition def = avg::TypeDefinition("CEFnode", "rasternode",
             ExportedObject::buildObject<CEFNode>)
         .addArg(Arg<bool>("transparent", false, false,
-                offsetof(CEFNode, m_Transparent)));
-		//.addArg();
+                offsetof(CEFNode, m_Transparent)))
+		.addArg(Arg<bool>("keyboardInput", false, false,
+				offsetof(CEFNode, m_KeyboardInput)))
+		.addArg(Arg<bool>("mouseInput", false, false,
+				offsetof(CEFNode, m_MouseInput)));
 
     const char* allowedParentNodeNames[] = {"avg", "div", 0};
     avg::TypeRegistry::get()->registerType(def, allowedParentNodeNames);
@@ -170,8 +192,12 @@ BOOST_PYTHON_MODULE(CEFplugin)
 {
     class_<CEFNode, bases<RasterNode>, boost::noncopyable>("CEFnode", no_init)
         .def("__init__", raw_constructor(createNode<CEFNodeName>))
-		.add_property("transparent",
-			&CEFNode::setTransparent, &CEFNode::getTransparent );
+		.add_property("transparent", &CEFNode::getTransparent ) // Read only
+		.add_property("keyboardInput",
+			&CEFNode::getKeyboardInput, &CEFNode::setKeyboardInput )
+		.add_property("mouseInput",
+			&CEFNode::getMouseInput, &CEFNode::setMouseInput )
+		.def("loadURL", &CEFNode::LoadURL );
 }
 
 AVG_PLUGIN_API PyObject* registerPlugin()

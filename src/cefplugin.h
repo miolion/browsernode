@@ -37,8 +37,7 @@
 namespace avg
 {
 
-/*! \brief Because this is a non-POD type, we can't use offsetof on it.
- * because of this, we need a wrapper for the python API around it. */
+/*! \brief Represents a CEF browser instance. */
 class CEFNode : public RasterNode, public IPreRenderListener, public CEFWrapper
 {
 public:
@@ -68,6 +67,12 @@ public:
     void setTransparent(bool trans);
     bool getTransparent() const;
 
+    void setKeyboardInput(bool keyb);
+    bool getKeyboardInput() const;
+
+    void setMouseInput(bool mouse);
+    bool getMouseInput() const;
+
 private:
 
 	glm::vec2 m_LastSize;
@@ -76,6 +81,8 @@ private:
 	bool m_SurfaceCreated;
 
 	bool m_Transparent;
+    bool m_KeyboardInput;
+    bool m_MouseInput;
 
 };
 

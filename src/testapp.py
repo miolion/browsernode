@@ -26,6 +26,9 @@ class MyMainDiv(app.MainDiv):
     def onInit(self):
         player.loadPlugin("libavg_cefplugin")
         node = libavg_cefplugin.CEFnode(size=self.size, id="cef", parent=self)
+        node.loadURL( "youtube.com" )
+        node.keyboardInput = True
+        node.mouseInput = True
         #node2 = CEFplugin.CEFnode(fillcolor="aa0000", id="cefb", parent=self)
         #node3 = CEFplugin.CEFnode(fillcolor="00ab0a", id="cefc", parent=self)
         #root.appendChild(node)
@@ -40,4 +43,4 @@ class MyMainDiv(app.MainDiv):
         pass
 
 print player.pluginPath;
-app.App().run(MyMainDiv(), app_resolution='1920x1080')
+app.App().run(MyMainDiv(), app_resolution='1024x600')
