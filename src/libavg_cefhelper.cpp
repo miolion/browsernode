@@ -5,13 +5,16 @@
  */
 #include "cefwrapper.h"
 
+#ifdef _WIN32
+#include <direct.h>
+#endif
+
 int main( int argc, char** argv )
 {
 	// On windows, argc/argv constructor is not supported.
 #ifndef _WIN32
 	CefMainArgs args( argc, argv );
 #else
-#include <direct.h>
 	CefMainArgs args( GetModuleHandle( nullptr ) );
 #endif
 

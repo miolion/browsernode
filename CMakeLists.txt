@@ -34,10 +34,8 @@ if(NOT PLATFORM_WINDOWS)
   set( AVG_BUILD_DIR "" CACHE PATH "Path to avg build directory.")
 
 else() # On windows let user specify dependencies.
-  set( SDL2_INCLUDE_DIRS "" CACHE PATH "Path to SDL2/include" )
-  set( SDL2_LIBRARIES "" CACHE PATH "Path to SDL2 .lib s" )
-  set( LIBXML2_INCLUDE_DIRS "" CACHE PATH "Path to libxml2/include")
-  set( LIBXML2_LIBRARIES "" CACHE PATH "Path to libxml2 .lib s")
+  set( AVG_DEPENDENCY_INCLUDE_DIR "" CACHE PATH "Path to libavg windows dependencies/include")
+  set( AVG_DEPENDENCY_LIBRARIES "" CACHE PATH "Path to libavg windows dependencies/libs")
 
   set( AVG_LIB_PATH "" CACHE FILEPATH "Path to avg.lib.")
 endif()
@@ -49,14 +47,28 @@ set( CEF_DIR "" CACHE PATH "Path to CEF directory.")
 set( AVG_DIR "" CACHE PATH "Path to avg directory.")
 
 
-include_directories( src ${PYTHON_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS}
-  ${LIBXML2_INCLUDE_DIRS} ${CEF_DIR} )
+include_directories(
+  src
+  ${PYTHON_INCLUDE_DIRS}
+  ${CEF_DIR}
+
+  #unix
+  ${SDL2_INCLUDE_DIRS}
+  ${LIBXML2_INCLUDE_DIRS}
+
+  #for windows
+  ${AVG_DEPENDENCY_INCLUDE_DIR}
+   )
 
 link_directories(
   ${CEF_DIR}/Release/
+
+  #unix
   ${SDL2_LIBRARIES}
-  ${PYTHON_LIBRARIES}
-  ${LIBXML2_LIBRARIES} )
+  ${LIBXML2_LIBRARIES}
+
+  #windows
+  ${AVG_DEPENDENCY_LIBRARIES} )
 
 ##############################################################################
 # HELPER
@@ -65,7 +77,12 @@ set(HELPERSOURCES src/libavg_cefhelper.cpp src/cefwrapper.cpp src/cefwrapper.h)
 
 add_executable(avg_cefhelper ${HELPERSOURCES})
 
-target_link_libraries(avg_cefhelper cef ${CEF_WRAPPER_LIB})
+if(NOT PLATFORM_WINDOWS)
+	target_link_libraries(avg_cefhelper cef ${CEF_WRAPPER_LIB})
+else()
+	target_link_libraries(avg_cefhelper libcef ${CEF_WRAPPER_LIB})
+endif()
+
 target_compile_definitions(avg_cefhelper PRIVATE CEF_APP_ONLY)
 
 # Copy helper executable to Release/
@@ -83,6 +100,7 @@ set(PLUGINSOURCES src/cefwrapper.cpp src/cefwrapper.h
   src/cefplugin.cpp src/cefplugin.h)
 
 add_library(avg_cefplugin MODULE ${PLUGINSOURCES})
+set_target_properties(avg_cefplugin PROPERTIES PREFIX "lib")
 
 target_include_directories( avg_cefplugin PRIVATE ${AVG_DIR}/src/ )
 
@@ -98,6 +116,7 @@ if(NOT PLATFORM_WINDOWS)
     ${AVG_BUILD_DIR}/src/base/libbase.a
     ${AVG_BUILD_DIR}/src/tess/libtess.a
     ${AVG_BUILD_DIR}/src/oscpack/liboscpack.a
+	${PYTHON_LIBRARY}
     cef ${CEF_WRAPPER_LIB} SDL2 SDL2main )
 
   # Creating a hard link to python2.7.
@@ -112,7 +131,11 @@ if(NOT PLATFORM_WINDOWS)
 else()
   target_link_libraries( avg_cefplugin
     ${AVG_LIB_PATH}
-    cef ${CEF_WRAPPER_LIB} SDL2 SDL2main )
+	${PYTHON_LIBRARY}
+    libcef ${CEF_WRAPPER_LIB} SDL2 SDL2main )
+
+  # Make boost link the dynamic libraries instead of the static ones.
+  target_compile_definitions( avg_cefplugin PRIVATE -DBOOST_ALL_DYN_LINK )
 endif()
 
 # Getting python site-packages directory.
@@ -126,7 +149,7 @@ add_custom_command( TARGET avg_cefplugin POST_BUILD
   COMMAND "${CMAKE_COMMAND}" -E copy
      "$<TARGET_FILE:avg_cefplugin>"
      "${PYTHON_SITE}/libavg/plugin/$<TARGET_FILE_NAME:avg_cefplugin>"
-  COMMENT "Copying plugin to ${PYTHON_SITE}/libavg/plugin/libavg_cefplugin.so" )
+  COMMENT "Copying plugin to ${PYTHON_SITE}/libavg/plugin/" )
 
 
 ###############################################################################
