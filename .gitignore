@@ -44,3 +44,6 @@
 *.rc
 *.idb
 *.res
+
+#CMAKE stuff
+build/*

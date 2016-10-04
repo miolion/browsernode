@@ -32,36 +32,21 @@ CEFNode::~CEFNode()
 
 void CEFNode::connectDisplay()
 {
-	//try{
 	std::cout << "ConnectDisplay" << std::endl;
 	RasterNode::connectDisplay();
 	createSurface();
-	/*} catch( std::exception& )
-	{
-		std::cout << "ConnectDisplyFAILED$$$$!!!!";
-	}*/
 }
 
 void CEFNode::connect(CanvasPtr canvas)
 {
-	//try {
 	std::cout << "ConnectCanvas " << std::endl;
 	RasterNode::connect(canvas);
-	/*} catch( std::exception& )
-	{
-		std::cout << "ConnectCanvas FAILED$$$$!!!!";
-	}*/
 }
 
 void CEFNode::disconnect(bool kill)
 {
-	//try{
 	std::cout << "disconnect " << kill << std::endl;
 	RasterNode::disconnect(kill);
-	/*} catch( std::exception& )
-	{
-		std::cout << "disc FAILED$$$$!!!!";
-	}*/
 }
 
 void CEFNode::createSurface()
@@ -129,15 +114,12 @@ static ProfilingZoneID pzid("BrowserNode::render");
 
 void CEFNode::render(GLContext* context, const glm::mat4& transform)
 {
-	//std::cout << "Render" << std::endl;
     ScopeTimer Timer(pzid);
     blt32(context, transform);
-	// getSize(), getEffectiveOpacity(), getBlendMode());
 }
 
 void CEFNode::onPreRender()
 {
-	//std::cout << "Update" << std::endl;
 	Update();
 }
 
@@ -214,7 +196,7 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 
 	// Specify the path for the sub-process executable.
 #ifdef _WIN32
-	CefString(&settings.browser_subprocess_path).FromASCII("libavg_cefhelper.exe");
+	CefString(&settings.browser_subprocess_path).FromASCII("avg_cefhelper.exe");
 #else
 	CefString(&settings.browser_subprocess_path).FromASCII("./avg_cefhelper");
 #endif
