@@ -13,12 +13,12 @@ CEFNode::CEFNode(const ArgList& Args)
 	: RasterNode( "Node" ),
 	m_Transparent( false ), m_KeyboardInput( false ), m_MouseInput( false )
 {
-	// Must set blendMode directly, otherwise crashes because unknown blendmode.
-	RasterNode::setBlendModeStr("blend");
+	ObjectCounter::get()->incRef(&typeid(*this));
 
-	Args.setMembers(this);
+	RasterNode::setArgs( Args );
+	Args.setMembers( this );
 
-	Player::get()->registerPreRenderListener(this);
+	Player::get()->registerPreRenderListener( this );
 
 	CEFWrapper::Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
 
@@ -28,35 +28,31 @@ CEFNode::CEFNode(const ArgList& Args)
 
 CEFNode::~CEFNode()
 {
-	std::cout << "Destructor" << std::endl;
+	ObjectCounter::get()->decRef(&typeid(*this));
 	Player::get()->unregisterPreRenderListener(this);
 }
 
 void CEFNode::connectDisplay()
 {
-	std::cout << "ConnectDisplay" << std::endl;
 	RasterNode::connectDisplay();
 	createSurface();
 }
 
 void CEFNode::connect(CanvasPtr canvas)
 {
-	std::cout << "ConnectCanvas " << std::endl;
 	RasterNode::connect(canvas);
 }
 
 void CEFNode::disconnect(bool kill)
 {
-	std::cout << "disconnect " << kill << std::endl;
 	RasterNode::disconnect(kill);
 }
 
 void CEFNode::createSurface()
 {
-	std::cout << "createSurface" << std::endl;
 	if( getSize().x < 1 || getSize().y < 1 )
 	{
-		std::cout << "Tried to createsurfac with 0 size." << std::endl;
+		std::cout << "Tried to createsurface with 0 size." << std::endl;
 		return;
 	}
 
@@ -79,7 +75,6 @@ void CEFNode::createSurface()
 void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
         float parentEffectiveOpacity)
 {
-	//std::cout << "prerender" << std::endl;
 	if (!m_SurfaceCreated || getSize() != m_LastSize)
 	{
 		std::cout << "prerender - recreate with x"
@@ -127,7 +122,6 @@ void CEFNode::onPreRender()
 
 void CEFNode::renderFX(GLContext* context)
 {
-	std::cout << "RenderFX" << std::endl;
 	RasterNode::renderFX(context);
 }
 
@@ -169,6 +163,11 @@ void CEFNode::setMouseInput(bool mouse)
 	m_MouseInput = mouse;
 }
 
+void CEFNode::sendKeyEvent( KeyEventPtr keyevent )
+{
+	ProcessEvent( keyevent );
+}
+
 void CEFNode::registerType()
 {
     avg::TypeDefinition def = avg::TypeDefinition("CEFnode", "rasternode",
@@ -197,6 +196,7 @@ BOOST_PYTHON_MODULE(CEFplugin)
 			&CEFNode::getKeyboardInput, &CEFNode::setKeyboardInput )
 		.add_property("mouseInput",
 			&CEFNode::getMouseInput, &CEFNode::setMouseInput )
+		.def("sendKeyEvent", &CEFNode::sendKeyEvent )
 		.def("loadURL", &CEFNode::LoadURL );
 }
 

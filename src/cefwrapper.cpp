@@ -86,7 +86,7 @@ void CEFWrapper::AVGRenderHandler::Resize( glm::uvec2 size )
 {
 	if( size.x == 0 || size.y == 0 )
 	{
-		std::cout << "Waning, tried to set size to 0 " << std::endl;
+		std::cout << "Warning, tried to set size to 0 " << std::endl;
 		return;
 	}
 	mSize = size;
@@ -196,14 +196,14 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 			break;
 		}
 
-		if( mouse->getType() == Event::CURSOR_MOTION )
+		int type = mouse->getType();
+		if( type == Event::CURSOR_MOTION )
 		{
 			mBrowser->GetHost()->SendMouseMoveEvent( cefevent, false );
 		}
-		else
+		else if( type == Event::CURSOR_UP || type == Event::CURSOR_DOWN )
 		{
-			std::cout << "click" << btntype << std::endl;
-			bool mouseUp = mouse->getType() == Event::CURSOR_UP;
+			bool mouseUp = type == Event::CURSOR_UP;
 			mBrowser->GetHost()->
 				SendMouseClickEvent( cefevent, btntype, mouseUp, 1 );
 		}
@@ -220,15 +220,150 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 		mBrowser->GetHost()->SendMouseWheelEvent(cefevent, motion.x, motion.y);
 	} // if wheelevent
 
-	//std::cout << "kb:" << m_KeyboardInput << std::endl;
-
 	if( m_KeyboardInput && key )
 	{
-		std::cout << "Keypress Text:";
-		std::cout << key->getText() << std::endl;
+		// Maps key names to Windows keycodes, as they work universally.
+		static std::map< std::string, int > KeyMap =
+			{
+				{"Return", 13},
+				{"Keypad Enter", 13},
+				{"Period", 190},
+				{"Keypad .", 190},
+				{"Backspace", 8},
+				{"Tab", 9},
+				{"Escape", 27},
+				{"Left", 37},
+				{"Up", 38},
+				{"Right", 39},
+				{"Down", 40},
+				{"Home", 36},
+				{"End", 35},
+				{"PageUp", 33},
+				{"PageDown", 34},
+				{"Delete", 46},
+				{"Divide", 111},
+				{"Keypad /", 111},
+				{"Multiply", 106},
+				{"Keypad *", 106},
+				{"Minus", 109},
+				{"Keypad -", 109},
+				{"Plus", 107},
+				{"Keypad +", 107},
+				{"Comma", 190},
+				{"Left Shift", 16},
+				{"Right Shift", 16},
+				{"Left Ctrl", 17},
+				{"Right Ctrl", 17},
+				{"Left Alt", 18},
+				{"Right Alt", 18},
+				{"Left GUI", 91},
+				{"Right GUI", 92},
+				{"Menu", 93},
+				{"Pause", 19},
+				{"PrintScreen", 44},
+				{"ScrollLock", 141},
+				{"Numlock", 144},
+				{"Insert", 45},
+				{"CapsLock", 20},
+				{"F1", 112},
+				{"F2", 113},
+				{"F3", 114},
+				{"F4", 115},
+				{"F5", 116},
+				{"F6", 117},
+				{"F7", 118},
+				{"F8", 119},
+				{"F9", 120},
+				{"F10", 121},
+				{"F11", 122},
+				{"F12", 123},
+				{"F13", 124},
+				{"F14", 125},
+				{"F15", 126},
+				{"F16", 127},
+				{"F17", 128},
+				{"F18", 129},
+				{"F19", 130},
+				{"F20", 131},
+				{"F21", 132},
+				{"F22", 133},
+				{"F23", 134},
+				{"F24", 135},
+				{";", 186},
+				{"=", 187},
+				{",", 188},
+				{"-", 189},
+				{".", 190},
+				{"/", 191},
+				{"`", 192},
+				{"[", 219},
+				{"\\", 220},
+				{"]", 221},
+				{"'", 222},
+				{"<", 223},
+				{"Space", 32},
+				{"Keypad 0", 96},
+				{"Keypad 1", 97},
+				{"Keypad 2", 98},
+				{"Keypad 3", 99},
+				{"Keypad 4", 100},
+				{"Keypad 5", 101},
+				{"Keypad 6", 102},
+				{"Keypad 7", 103},
+				{"Keypad 8", 104},
+				{"Keypad 9", 105},
+				{"0", 48},
+				{"1", 49},
+				{"2", 50},
+				{"3", 51},
+				{"4", 52},
+				{"5", 53},
+				{"6", 54},
+				{"7", 55},
+				{"8", 56},
+				{"9", 57},
+				{"A", 65},
+				{"B", 66},
+				{"C", 67},
+				{"D", 68},
+				{"E", 69},
+				{"F", 70},
+				{"G", 71},
+				{"H", 72},
+				{"I", 73},
+				{"J", 74},
+				{"K", 75},
+				{"L", 76},
+				{"M", 77},
+				{"N", 78},
+				{"O", 79},
+				{"P", 80},
+				{"Q", 81},
+				{"R", 82},
+				{"S", 83},
+				{"T", 84},
+				{"U", 85},
+				{"V", 86},
+				{"W", 87},
+				{"X", 88},
+				{"Y", 89},
+				{"Z", 90}
+			};
+
 		CefKeyEvent evt;
 		evt.type = (key->getType() == Event::KEY_DOWN)
 						? KEYEVENT_KEYDOWN : KEYEVENT_KEYUP;
+
+		// Try to map key avg name to windows vk keycode.
+		auto i = KeyMap.find( key->getName() );
+		int kc = 0;
+		if( i != KeyMap.end() )
+		{
+			kc = i->second;
+		}
+		else std::cout << "Unknow KeyName:" << key->getName() << std::endl;
+
+		evt.windows_key_code = kc;
 
 		int mod = key->getModifiers();
 		bool shift = (mod & KMOD_SHIFT) != 0;
@@ -255,218 +390,19 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 
 		evt.modifiers = modifiers;
 
+
 		UTF8String text = key->getText();
-		if( text.size() )//isChar && evt.type == KEYEVENT_KEYDOWN )
+
+		// If there is text, send it as text.
+		if( text.size() )
 		{
 			evt.type = KEYEVENT_CHAR;
 			evt.character = text[0];
-			//evt.windows_key_code = charCode;
-		}
-		else
-		{
-			evt.native_key_code = key->getScanCode();
-			//evt.windows_key_code = keyCode;
 		}
 
 		mBrowser->GetHost()->SendKeyEvent( evt );
 	}
 }
-
-/*void CEFWrapper::ProcessEvent( SDL_Event& ev )
-{
-	switch( ev.type )
-	{
-	case SDL_MOUSEMOTION:
-		{
-			CefMouseEvent evt;
-			evt.x = ev.motion.x;
-			evt.y = ev.motion.y;
-
-			mBrowser->GetHost()->SendMouseMoveEvent( evt, false );
-		}
-		break;
-
-	case SDL_MOUSEBUTTONUP:
-	case SDL_MOUSEBUTTONDOWN:
-		{
-			CefMouseEvent evt;
-			evt.x = ev.button.x;
-			evt.y = ev.button.y;
-
-			bool mouseUp = ev.button.state == 0;
-			CefBrowserHost::MouseButtonType btntype =
-				static_cast<CefBrowserHost::MouseButtonType>( ev.button.button - 1 );
-
-			mBrowser->GetHost()->
-				SendMouseClickEvent( evt, btntype, mouseUp, ev.button.clicks );
-		}
-		break;
-
-	case SDL_MOUSEWHEEL:
-		{
-			CefMouseEvent evt;
-
-			evt.x = ev.wheel.x;
-			evt.y = ev.wheel.y;
-
-			int dx = evt.x * 40;
-			int dy = evt.y * 40;
-
-			mBrowser->GetHost()->SendMouseWheelEvent( evt, dx, dy );
-		}
-		break;
-
-	case SDL_KEYDOWN:
-	case SDL_KEYUP:
-		{
-			bool shift = (ev.key.keysym.mod & KMOD_SHIFT) != 0;
-			bool ctrl = (ev.key.keysym.mod & KMOD_CTRL) != 0;
-			bool alt = (ev.key.keysym.mod & KMOD_ALT) != 0;
-			bool num_lock = !(ev.key.keysym.mod & KMOD_NUM);
-			bool caps_lock = (ev.key.keysym.mod & KMOD_CAPS) != 0;
-
-			int modifiers = 0;
-			if( shift )
-				modifiers += EVENTFLAG_SHIFT_DOWN;
-
-			if( ctrl )
-				modifiers += EVENTFLAG_CONTROL_DOWN;
-
-			if( alt )
-				modifiers += EVENTFLAG_ALT_DOWN;
-
-			if( num_lock )
-				modifiers += EVENTFLAG_NUM_LOCK_ON;
-
-			if( caps_lock )
-				modifiers += EVENTFLAG_CAPS_LOCK_ON;
-
-			int keyCode = 0;
-			int charCode = ev.key.keysym.sym;
-
-			bool isChar = false;
-			if( (charCode >= SDLK_a && charCode <= SDLK_z) ||
-				(charCode >= SDLK_0 && charCode <= SDLK_9) )
-			{
-				isChar = true;
-			}
-			else if( charCode >= SDLK_KP_1 && charCode <= SDLK_KP_0 )
-			{
-				isChar = true;
-				charCode = charCode - SDLK_KP_1;
-				charCode = (charCode + 1) % 10; // Remap from 1,2..,9,0 to 0-9.
-				charCode += SDLK_0; // Transform back into char.
-			}
-			else
-			{
-				// If you don't like magic numbers, stop reading now.
-				switch( ev.key.keysym.sym )
-				{
-					case SDLK_KP_ENTER:
-					case SDLK_RETURN:
-						isChar = true;
-						keyCode = 13;
-						charCode = 13;
-						break;
-
-					case SDLK_PERIOD:
-						isChar = true;
-						keyCode = 190;
-						charCode = 46;
-						break;
-
-					case SDLK_BACKSPACE:
-						keyCode = 8;
-						break;
-					case SDLK_TAB:
-						keyCode = 9;
-						break;
-					case SDLK_ESCAPE:
-						keyCode = 27;
-						break;
-					case SDLK_LEFT:
-						keyCode = 37;
-						break;
-					case SDLK_UP:
-						keyCode = 38;
-						break;
-					case SDLK_RIGHT:
-						keyCode = 39;
-						break;
-					case SDLK_DOWN:
-						keyCode = 40;
-						break;
-					case SDLK_HOME:
-						keyCode = 36;
-						break;
-					case SDLK_END:
-						keyCode = 35;
-						break;
-					case SDLK_PAGEUP:
-						keyCode = 33;
-						break;
-					case SDLK_PAGEDOWN:
-						keyCode = 34;
-						break;
-					case SDLK_DELETE:
-						keyCode = 46;
-						charCode = 46;
-						break;
-					case SDLK_KP_DIVIDE:
-						isChar = true;
-						keyCode = 111;
-						charCode = 47;
-						break;
-					case SDLK_KP_MULTIPLY:
-						isChar = true;
-						keyCode = 106;
-						charCode = 42;
-						break;
-					case SDLK_KP_MINUS:
-						isChar = true;
-						keyCode = 109;
-						charCode = 45;
-						break;
-					case SDLK_KP_PLUS:
-						isChar = true;
-						keyCode = 107;
-						charCode = 43;
-						break;
-					case SDLK_KP_PERIOD:
-					case SDLK_KP_COMMA:
-						isChar = true;
-						charCode = 46;
-						keyCode = 190;
-						break;
-					default:
-						LOG_WARNING() << "unknown keystroke:" << ev.key.keysym.sym;
-						return;
-						break;
-				}
-			}
-
-			CefKeyEvent evt;
-			evt.type = (ev.key.state == SDL_PRESSED)
-								? KEYEVENT_KEYDOWN : KEYEVENT_KEYUP;
-
-			evt.modifiers = modifiers;
-
-			if( isChar && evt.type == KEYEVENT_KEYDOWN )
-			{
-				evt.type = KEYEVENT_CHAR;
-				evt.character = charCode;
-				evt.windows_key_code = charCode;
-			}
-			else
-			{
-				evt.windows_key_code = keyCode;
-			}
-
-			mBrowser->GetHost()->SendKeyEvent( evt );
-		}
-		break;
-	}
-}*/
 
 void CEFWrapper::Cleanup()
 {
@@ -516,7 +452,7 @@ bool CEFWrapper::OnProcessMessageReceived(
 	CefProcessId sender,
 	CefRefPtr< CefProcessMessage > message )
 {
-	std::string name = message->GetName();
+	/*std::string name = message->GetName();
 
 	if( name == "onclick" )
 	{
@@ -538,7 +474,7 @@ bool CEFWrapper::OnProcessMessageReceived(
 		}
 		//else LOG_WARNING() << "Couldn't find callback for cmd:" << name;
 	}
-	return false;
+	return false;*/
 }
 
 void CEFWrapper::OnLoadEnd(
@@ -546,7 +482,7 @@ void CEFWrapper::OnLoadEnd(
 	CefRefPtr< CefFrame > frame,
 	int httpcode )
 {
-	#define MULTILINE(...) #__VA_ARGS__
+	/*#define MULTILINE(...) #__VA_ARGS__
 	const char* code = MULTILINE(
 		function makeclick( id )
 		{
@@ -564,8 +500,8 @@ void CEFWrapper::OnLoadEnd(
 			}
 		}
 		);
-
-	frame->ExecuteJavaScript( code, __FUNCTION__, __LINE__ );
+	*/
+	//frame->ExecuteJavaScript( code, __FUNCTION__, __LINE__ );
 }
 
 #endif

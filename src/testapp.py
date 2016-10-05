@@ -25,22 +25,23 @@ os.environ['AVG_LOG_CATEGORIES']="""APP:DBG CONFIG:DBG DEPREC:DBG EVENTS:DBG
 class MyMainDiv(app.MainDiv):
     def onInit(self):
         player.loadPlugin("libavg_cefplugin")
-        node = libavg_cefplugin.CEFnode(size=self.size, id="cef", parent=self)
-        node.loadURL( "youtube.com" )
-        node.keyboardInput = True
-        node.mouseInput = True
-        #node2 = CEFplugin.CEFnode(fillcolor="aa0000", id="cefb", parent=self)
-        #node3 = CEFplugin.CEFnode(fillcolor="00ab0a", id="cefc", parent=self)
-        #root.appendChild(node)
-        #self.BrowserNode( parent=self )
+        self.node = libavg_cefplugin.CEFnode(size=self.size, id="cef", parent=self)
+        self.node.loadURL( "google.com" )
+        self.node.keyboardInput = True
+        self.node.mouseInput = True
+        player.subscribe(player.KEY_DOWN, self.onKey)
+        player.subscribe(player.KEY_UP, self.onKey)
+        pass
+
+    def onKey(self, keyevent):
+        self.node.sendKeyEvent( keyevent )
         pass
 
     def onExit(self):
-        print( "exiting" );
         pass
 
     def onFrame(self):
         pass
 
-print player.pluginPath;
+#print player.pluginPath;
 app.App().run(MyMainDiv(), app_resolution='1024x600')

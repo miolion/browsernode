@@ -8,6 +8,7 @@
 #include <base/IPreRenderListener.h>
 #include <base/ProfilingZone.h>
 #include <base/ScopeTimer.h>
+#include <base/ObjectCounter.h>
 
 
 #include <player/Player.h>
@@ -64,7 +65,6 @@ public:
 	void onPreRender();
 
     // Python API
-    void setTransparent(bool trans);
     bool getTransparent() const;
 
     void setKeyboardInput(bool keyb);
@@ -72,6 +72,8 @@ public:
 
     void setMouseInput(bool mouse);
     bool getMouseInput() const;
+
+    void sendKeyEvent( KeyEventPtr keyevent );
 
 private:
 

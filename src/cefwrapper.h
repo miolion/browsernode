@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <map>
 
 #include <include/cef_render_handler.h>
 #include <include/cef_client.h>
