@@ -132,6 +132,10 @@ CEFWrapper::CEFWrapper()
 {
 }
 
+CEFWrapper::~CEFWrapper()
+{
+}
+
 void CEFWrapper::Init( glm::uvec2 res, bool transparent )
 {
 	CefWindowInfo windowinfo;
@@ -174,6 +178,18 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 	MouseWheelEventPtr wheel = boost::dynamic_pointer_cast<MouseWheelEvent>(ev);
 	KeyEventPtr key = boost::dynamic_pointer_cast<KeyEvent>(ev);
 
+	switch( ev->getType() )
+	{
+		case Event::CURSOR_OVER:
+			std::cout << "Got focus" << std::endl;
+			mBrowser->GetHost()->SendFocusEvent(true);
+			break;
+		case Event::CURSOR_OUT:
+			mBrowser->GetHost()->SendFocusEvent(false);
+			break;
+			
+	}
+
 	if( m_MouseInput && mouse )
 	{
 		glm::vec2 coords = mouse->getPos();
@@ -187,12 +203,15 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 		{
 		case MouseEvent::LEFT_BUTTON:
 			btntype = MBT_LEFT;
+			cefevent.modifiers |= EVENTFLAG_LEFT_MOUSE_BUTTON;
 			break;
 		case MouseEvent::MIDDLE_BUTTON:
 			btntype = MBT_MIDDLE;
+			cefevent.modifiers |= EVENTFLAG_MIDDLE_MOUSE_BUTTON;
 			break;
 		case MouseEvent::RIGHT_BUTTON:
 			btntype = MBT_RIGHT;
+			cefevent.modifiers |= EVENTFLAG_RIGHT_MOUSE_BUTTON;
 			break;
 		}
 
@@ -213,146 +232,147 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 	{
 		CefMouseEvent cefevent;
 		glm::vec2 pos = wheel->getPos();
-		cefevent.x = pos.x;
-		cefevent.y = pos.y;
+		cefevent.x = (int)pos.x;
+		cefevent.y = (int)pos.y;
 
 		glm::vec2 motion = wheel->getMotion() * 40.0f;
-		mBrowser->GetHost()->SendMouseWheelEvent(cefevent, motion.x, motion.y);
+		mBrowser->GetHost()->SendMouseWheelEvent(cefevent, (int)motion.x, (int)motion.y);
 	} // if wheelevent
 
 	if( m_KeyboardInput && key )
 	{
-		// Maps key names to Windows keycodes, as they work universally.
-		static std::map< std::string, int > KeyMap =
-			{
-				{"Return", 13},
-				{"Keypad Enter", 13},
-				{"Period", 190},
-				{"Keypad .", 190},
-				{"Backspace", 8},
-				{"Tab", 9},
-				{"Escape", 27},
-				{"Left", 37},
-				{"Up", 38},
-				{"Right", 39},
-				{"Down", 40},
-				{"Home", 36},
-				{"End", 35},
-				{"PageUp", 33},
-				{"PageDown", 34},
-				{"Delete", 46},
-				{"Divide", 111},
-				{"Keypad /", 111},
-				{"Multiply", 106},
-				{"Keypad *", 106},
-				{"Minus", 109},
-				{"Keypad -", 109},
-				{"Plus", 107},
-				{"Keypad +", 107},
-				{"Comma", 190},
-				{"Left Shift", 16},
-				{"Right Shift", 16},
-				{"Left Ctrl", 17},
-				{"Right Ctrl", 17},
-				{"Left Alt", 18},
-				{"Right Alt", 18},
-				{"Left GUI", 91},
-				{"Right GUI", 92},
-				{"Menu", 93},
-				{"Pause", 19},
-				{"PrintScreen", 44},
-				{"ScrollLock", 141},
-				{"Numlock", 144},
-				{"Insert", 45},
-				{"CapsLock", 20},
-				{"F1", 112},
-				{"F2", 113},
-				{"F3", 114},
-				{"F4", 115},
-				{"F5", 116},
-				{"F6", 117},
-				{"F7", 118},
-				{"F8", 119},
-				{"F9", 120},
-				{"F10", 121},
-				{"F11", 122},
-				{"F12", 123},
-				{"F13", 124},
-				{"F14", 125},
-				{"F15", 126},
-				{"F16", 127},
-				{"F17", 128},
-				{"F18", 129},
-				{"F19", 130},
-				{"F20", 131},
-				{"F21", 132},
-				{"F22", 133},
-				{"F23", 134},
-				{"F24", 135},
-				{";", 186},
-				{"=", 187},
-				{",", 188},
-				{"-", 189},
-				{".", 190},
-				{"/", 191},
-				{"`", 192},
-				{"[", 219},
-				{"\\", 220},
-				{"]", 221},
-				{"'", 222},
-				{"<", 223},
-				{"Space", 32},
-				{"Keypad 0", 96},
-				{"Keypad 1", 97},
-				{"Keypad 2", 98},
-				{"Keypad 3", 99},
-				{"Keypad 4", 100},
-				{"Keypad 5", 101},
-				{"Keypad 6", 102},
-				{"Keypad 7", 103},
-				{"Keypad 8", 104},
-				{"Keypad 9", 105},
-				{"0", 48},
-				{"1", 49},
-				{"2", 50},
-				{"3", 51},
-				{"4", 52},
-				{"5", 53},
-				{"6", 54},
-				{"7", 55},
-				{"8", 56},
-				{"9", 57},
-				{"A", 65},
-				{"B", 66},
-				{"C", 67},
-				{"D", 68},
-				{"E", 69},
-				{"F", 70},
-				{"G", 71},
-				{"H", 72},
-				{"I", 73},
-				{"J", 74},
-				{"K", 75},
-				{"L", 76},
-				{"M", 77},
-				{"N", 78},
-				{"O", 79},
-				{"P", 80},
-				{"Q", 81},
-				{"R", 82},
-				{"S", 83},
-				{"T", 84},
-				{"U", 85},
-				{"V", 86},
-				{"W", 87},
-				{"X", 88},
-				{"Y", 89},
-				{"Z", 90}
-			};
+		// Maps key names to Windows keycodes, as they are needed universally.
+		static std::map< std::string, int > KeyMap = boost::assign::map_list_of
+				("Return", 13)
+				("Keypad Enter", 13)
+				("Period", 190)
+				("Keypad .", 190)
+				("Backspace", 8)
+				("Tab", 9)
+				("Escape", 27)
+				("Left", 37)
+				("Up", 38)
+				("Right", 39)
+				("Down", 40)
+				("Home", 36)
+				("End", 35)
+				("PageUp", 33)
+				("PageDown", 34)
+				("Delete", 46)
+				("Divide", 111)
+				("Keypad /", 111)
+				("Multiply", 106)
+				("Keypad *", 106)
+				("Minus", 109)
+				("Keypad -", 109)
+				("Plus", 107)
+				("Keypad +", 107)
+				("Comma", 190)
+				("Left Shift", 16)
+				("Right Shift", 16)
+				("Left Ctrl", 17)
+				("Right Ctrl", 17)
+				("Left Alt", 18)
+				("Right Alt", 18)
+				("Left GUI", 91)
+				("Right GUI", 92)
+				("Menu", 93)
+				("Pause", 19)
+				("PrintScreen", 44)
+				("ScrollLock", 141)
+				("Numlock", 144)
+				("Insert", 45)
+				("CapsLock", 20)
+				("F1", 112)
+				("F2", 113)
+				("F3", 114)
+				("F4", 115)
+				("F5", 116)
+				("F6", 117)
+				("F7", 118)
+				("F8", 119)
+				("F9", 120)
+				("F10", 121)
+				("F11", 122)
+				("F12", 123)
+				("F13", 124)
+				("F14", 125)
+				("F15", 126)
+				("F16", 127)
+				("F17", 128)
+				("F18", 129)
+				("F19", 130)
+				("F20", 131)
+				("F21", 132)
+				("F22", 133)
+				("F23", 134)
+				("F24", 135)
+				/*(";", 186)
+				("=", 187)
+				(",", 188)
+				("-", 189)
+				(".", 190)
+				("/", 191)
+				("`", 192)
+				("[", 219)
+				("\\", 220)
+				("]", 221)
+				("'", 222)
+				("<", 223)*/
+				("Space", 32)
+				("Keypad 0", 96)
+				("Keypad 1", 97)
+				("Keypad 2", 98)
+				("Keypad 3", 99)
+				("Keypad 4", 100)
+				("Keypad 5", 101)
+				("Keypad 6", 102)
+				("Keypad 7", 103)
+				("Keypad 8", 104)
+				("Keypad 9", 105)
+				("0", 48)
+				("1", 49)
+				("2", 50)
+				("3", 51)
+				("4", 52)
+				("5", 53)
+				("6", 54)
+				("7", 55)
+				("8", 56)
+				("9", 57)
+				/*("A", 65)
+				("B", 66)
+				("C", 67)
+				("D", 68)
+				("E", 69)
+				("F", 70)
+				("G", 71)
+				("H", 72)
+				("I", 73)
+				("J", 74)
+				("K", 75)
+				("L", 76)
+				("M", 77)
+				("N", 78)
+				("O", 79)
+				("P", 80)
+				("Q", 81)
+				("R", 82)
+				("S", 83)
+				("T", 84)
+				("U", 85)
+				("V", 86)
+				("W", 87)
+				("X", 88)
+				("Y", 89)
+				("Z", 90)*/;
 
 		CefKeyEvent evt;
 		evt.type = (key->getType() == Event::KEY_DOWN)
-						? KEYEVENT_KEYDOWN : KEYEVENT_KEYUP;
+						? KEYEVENT_RAWKEYDOWN : KEYEVENT_KEYUP;
+
+		std::wstring_convert< 
+				std::codecvt<char16_t, char, std::mbstate_t>, char16_t> conv16;
 
 		// Try to map key avg name to windows vk keycode.
 		auto i = KeyMap.find( key->getName() );
@@ -361,9 +381,15 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 		{
 			kc = i->second;
 		}
-		else std::cout << "Unknow KeyName:" << key->getName() << std::endl;
+		else
+		{
+			// If we can't, just use UTF16 representation.
+			std::u16string str16 = conv16.from_bytes(key->getName());
+			kc = str16[0];
+		}
 
 		evt.windows_key_code = kc;
+
 
 		int mod = key->getModifiers();
 		bool shift = (mod & KMOD_SHIFT) != 0;
@@ -374,7 +400,16 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 
 		int modifiers = 0;
 		if( shift )
+		{
 			modifiers += EVENTFLAG_SHIFT_DOWN;
+		}
+#ifdef _WIN32
+		else if( evt.windows_key_code <= 90 &&
+				evt.windows_key_code >= 65 )
+		{
+				evt.windows_key_code += 32;
+		}
+#endif
 
 		if( ctrl )
 			modifiers += EVENTFLAG_CONTROL_DOWN;
@@ -393,11 +428,21 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 
 		UTF8String text = key->getText();
 
+		// This signals that key was pressed once.
+		// evt.native_key_code = 0x00000001;
+
+
 		// If there is text, send it as text.
 		if( text.size() )
 		{
+			std::u16string str16 = conv16.from_bytes(text);
+
 			evt.type = KEYEVENT_CHAR;
-			evt.character = text[0];
+			evt.character = str16[0];
+			evt.unmodified_character = str16[0];
+			evt.windows_key_code = str16[0];
+			//std::cout << std::hex << "wk" << evt.windows_key_code << " nk" << evt.native_key_code << " iss" << evt.is_system_key << std::endl;
+			//std::cout << text << std::endl;
 		}
 
 		mBrowser->GetHost()->SendKeyEvent( evt );
@@ -406,6 +451,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 
 void CEFWrapper::Cleanup()
 {
+	std::cout << "Cleaning up" << std::endl;
 	CefShutdown();
 }
 
@@ -473,8 +519,8 @@ bool CEFWrapper::OnProcessMessageReceived(
 			i->second.first( data ,i->second.second );
 		}
 		//else LOG_WARNING() << "Couldn't find callback for cmd:" << name;
-	}
-	return false;*/
+	}*/
+	return false;
 }
 
 void CEFWrapper::OnLoadEnd(

@@ -197,7 +197,8 @@ BOOST_PYTHON_MODULE(CEFplugin)
 		.add_property("mouseInput",
 			&CEFNode::getMouseInput, &CEFNode::setMouseInput )
 		.def("sendKeyEvent", &CEFNode::sendKeyEvent )
-		.def("loadURL", &CEFNode::LoadURL );
+		.def("loadURL", &CEFNode::LoadURL )
+		.def("cleanup", &CEFNode::Cleanup ).staticmethod( "cleanup" );
 }
 
 AVG_PLUGIN_API PyObject* registerPlugin()

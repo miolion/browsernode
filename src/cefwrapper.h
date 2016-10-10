@@ -4,6 +4,9 @@
 #include <unordered_map>
 #include <string>
 #include <map>
+#include <locale>
+
+
 
 #include <include/cef_render_handler.h>
 #include <include/cef_client.h>
@@ -52,6 +55,8 @@ public:
 
 #include <SDL2/SDL_keycode.h>
 #include <glm/glm.hpp>
+
+#include <boost/assign.hpp>
 
 #include <player/Player.h>
 #include <player/OGLSurface.h>
@@ -125,6 +130,7 @@ private:
 
 public:
 	CEFWrapper();
+	virtual ~CEFWrapper();
 
 	void Init( glm::uvec2 res, bool transparent );
 
@@ -139,7 +145,7 @@ public:
 	void ProcessEvent( avg::EventPtr ev );
 
 	/*! \brief Should be called before application exit. */
-	void Cleanup();
+	static void Cleanup();
 
 	/*! \brief Used to add callback to onclick method of element with given DOM id.
 	 * \param DOMid ID of DOM element to bind callback to.
