@@ -377,6 +377,9 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 			evt.type = KEYEVENT_CHAR;
 			evt.character = str16[0];
 			evt.unmodified_character = str16[0];
+#ifdef _WIN32
+			evt.windows_key_code = str16[0];
+#endif
 		}
 
 		mBrowser->GetHost()->SendKeyEvent( evt );
