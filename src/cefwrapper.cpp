@@ -299,18 +299,6 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 				("F22", 133)
 				("F23", 134)
 				("F24", 135)
-				/*(";", 186)
-				("=", 187)
-				(",", 188)
-				("-", 189)
-				(".", 190)
-				("/", 191)
-				("`", 192)
-				("[", 219)
-				("\\", 220)
-				("]", 221)
-				("'", 222)
-				("<", 223)*/
 				("Space", 32)
 				("Keypad 0", 96)
 				("Keypad 1", 97)
@@ -321,43 +309,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 				("Keypad 6", 102)
 				("Keypad 7", 103)
 				("Keypad 8", 104)
-				("Keypad 9", 105)
-				("0", 48)
-				("1", 49)
-				("2", 50)
-				("3", 51)
-				("4", 52)
-				("5", 53)
-				("6", 54)
-				("7", 55)
-				("8", 56)
-				("9", 57)
-				/*("A", 65)
-				("B", 66)
-				("C", 67)
-				("D", 68)
-				("E", 69)
-				("F", 70)
-				("G", 71)
-				("H", 72)
-				("I", 73)
-				("J", 74)
-				("K", 75)
-				("L", 76)
-				("M", 77)
-				("N", 78)
-				("O", 79)
-				("P", 80)
-				("Q", 81)
-				("R", 82)
-				("S", 83)
-				("T", 84)
-				("U", 85)
-				("V", 86)
-				("W", 87)
-				("X", 88)
-				("Y", 89)
-				("Z", 90)*/;
+				("Keypad 9", 105);
 
 		CefKeyEvent evt;
 		evt.type = (key->getType() == Event::KEY_DOWN)
@@ -375,9 +327,9 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 		else
 		{
 			// If we can't, just use UTF16 representation.
+			// This causes many errors on windows, but works well on linux.
 			std::u16string str16 = conv16.from_bytes(key->getName());
 			kc = str16[0];
-			std::cout << str16[0] << "," << key->getName() << std::endl;
 		}
 
 		evt.windows_key_code = kc;
@@ -395,13 +347,6 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 		{
 			modifiers += EVENTFLAG_SHIFT_DOWN;
 		}
-#ifdef _WIN32
-		else if( evt.windows_key_code <= 90 &&
-				evt.windows_key_code >= 65 )
-		{
-				evt.windows_key_code += 32;
-		}
-#endif
 
 		if( ctrl )
 			modifiers += EVENTFLAG_CONTROL_DOWN;
@@ -421,7 +366,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 		UTF8String text = key->getText();
 
 		// This signals that key was pressed once.
-		// evt.native_key_code = 0x00000001;
+		evt.native_key_code = 0x00000001;
 
 
 		// If there is text, send it as text.
@@ -431,10 +376,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 
 			evt.type = KEYEVENT_CHAR;
 			evt.character = str16[0];
-			/*evt.unmodified_character = str16[0];
-			evt.windows_key_code = str16[0];*/
-			//std::cout << std::hex << "wk" << evt.windows_key_code << " nk" << evt.native_key_code << " iss" << evt.is_system_key << std::endl;
-			//std::cout << text << std::endl;
+			evt.unmodified_character = str16[0];
 		}
 
 		mBrowser->GetHost()->SendKeyEvent( evt );
