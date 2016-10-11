@@ -38,6 +38,7 @@ class MyMainDiv(app.MainDiv):
         pass
 
     def onExit(self):
+        libavg_cefplugin.CEFnode.cleanup()
         pass
 
     def onFrame(self):

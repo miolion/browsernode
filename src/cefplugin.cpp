@@ -30,6 +30,7 @@ CEFNode::~CEFNode()
 {
 	ObjectCounter::get()->decRef(&typeid(*this));
 	Player::get()->unregisterPreRenderListener(this);
+	std::cout << "destructor called" << std::endl;
 }
 
 void CEFNode::connectDisplay()

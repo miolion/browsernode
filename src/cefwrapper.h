@@ -2,10 +2,11 @@
 #define CEFWRAPPER_H
 
 #include <unordered_map>
-#include <string>
 #include <map>
-#include <locale>
 
+#include <string>
+#include <locale>
+#include <codecvt>
 
 
 #include <include/cef_render_handler.h>
@@ -129,8 +130,6 @@ private:
 	bool m_MouseInput;
 
 public:
-	CEFWrapper();
-	virtual ~CEFWrapper();
 
 	void Init( glm::uvec2 res, bool transparent );
 

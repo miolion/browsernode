@@ -127,15 +127,6 @@ void CEFWrapper::AVGRenderHandler::ScheduleTexUpload( avg::MCTexturePtr texture 
 	avg::GLContextManager::get()->scheduleTexUpload(texture, mRenderBitmap);
 }
 
-
-CEFWrapper::CEFWrapper()
-{
-}
-
-CEFWrapper::~CEFWrapper()
-{
-}
-
 void CEFWrapper::Init( glm::uvec2 res, bool transparent )
 {
 	CefWindowInfo windowinfo;
@@ -185,9 +176,10 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 			mBrowser->GetHost()->SendFocusEvent(true);
 			break;
 		case Event::CURSOR_OUT:
+			std::cout << "Lost focus" << std::endl;
 			mBrowser->GetHost()->SendFocusEvent(false);
 			break;
-			
+
 	}
 
 	if( m_MouseInput && mouse )
@@ -371,8 +363,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 		evt.type = (key->getType() == Event::KEY_DOWN)
 						? KEYEVENT_RAWKEYDOWN : KEYEVENT_KEYUP;
 
-		std::wstring_convert< 
-				std::codecvt<char16_t, char, std::mbstate_t>, char16_t> conv16;
+		std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> conv16;
 
 		// Try to map key avg name to windows vk keycode.
 		auto i = KeyMap.find( key->getName() );
@@ -386,6 +377,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 			// If we can't, just use UTF16 representation.
 			std::u16string str16 = conv16.from_bytes(key->getName());
 			kc = str16[0];
+			std::cout << str16[0] << "," << key->getName() << std::endl;
 		}
 
 		evt.windows_key_code = kc;
@@ -439,8 +431,8 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 
 			evt.type = KEYEVENT_CHAR;
 			evt.character = str16[0];
-			evt.unmodified_character = str16[0];
-			evt.windows_key_code = str16[0];
+			/*evt.unmodified_character = str16[0];
+			evt.windows_key_code = str16[0];*/
 			//std::cout << std::hex << "wk" << evt.windows_key_code << " nk" << evt.native_key_code << " iss" << evt.is_system_key << std::endl;
 			//std::cout << text << std::endl;
 		}
