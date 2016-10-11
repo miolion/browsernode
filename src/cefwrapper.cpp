@@ -172,11 +172,9 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 	switch( ev->getType() )
 	{
 		case Event::CURSOR_OVER:
-			std::cout << "Got focus" << std::endl;
 			mBrowser->GetHost()->SendFocusEvent(true);
 			break;
 		case Event::CURSOR_OUT:
-			std::cout << "Lost focus" << std::endl;
 			mBrowser->GetHost()->SendFocusEvent(false);
 			break;
 
@@ -231,7 +229,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 		mBrowser->GetHost()->SendMouseWheelEvent(cefevent, (int)motion.x, (int)motion.y);
 	} // if wheelevent
 
-	if( m_KeyboardInput && key )
+	if( key )
 	{
 		// Maps key names to Windows keycodes, as they are needed universally.
 		static std::map< std::string, int > KeyMap = boost::assign::map_list_of
@@ -392,22 +390,6 @@ void CEFWrapper::Cleanup()
 	CefShutdown();
 }
 
-void CEFWrapper::AddClickCallback(
-	std::string domid, ClickCB cb, void* userdata )
-{
-	mClickCBs[domid] = std::make_pair( cb, userdata );
-}
-
-void CEFWrapper::RemoveClickCallback( std::string domid )
-{
-	auto i = mClickCBs.find( domid );
-	if( i != mClickCBs.end() )
-	{
-		mClickCBs.erase( i );
-	}
-	//else LOG_WARNING() << "Tried to remove inexistent callback with DOMid:" << domid;
-}
-
 void CEFWrapper::AddGenericCallback( std::string cmd, GenericCB cb, void* ud )
 {
 	mGenericCBs[cmd] = std::make_pair( cb, ud );
@@ -435,28 +417,15 @@ bool CEFWrapper::OnProcessMessageReceived(
 	CefProcessId sender,
 	CefRefPtr< CefProcessMessage > message )
 {
-	/*std::string name = message->GetName();
+	std::string name = message->GetName();
 
-	if( name == "onclick" )
+	auto i = mGenericCBs.find( name );
+	if( i != mGenericCBs.end() )
 	{
-		std::string id = message->GetArgumentList()->GetString( 0 );
-		auto i = mClickCBs.find( id );
-		if( i != mClickCBs.end() )
-		{
-			i->second.first( i->second.second );
-			return true;
-		}
+		std::string data = message->GetArgumentList()->GetString( 0 );
+		i->second.first( data ,i->second.second );
 	}
-	else
-	{
-		auto i = mGenericCBs.find( name );
-		if( i != mGenericCBs.end() )
-		{
-			std::string data = message->GetArgumentList()->GetString( 0 );
-			i->second.first( data ,i->second.second );
-		}
-		//else LOG_WARNING() << "Couldn't find callback for cmd:" << name;
-	}*/
+	//else LOG_WARNING() << "Couldn't find callback for cmd:" << name;
 	return false;
 }
 
@@ -465,26 +434,7 @@ void CEFWrapper::OnLoadEnd(
 	CefRefPtr< CefFrame > frame,
 	int httpcode )
 {
-	/*#define MULTILINE(...) #__VA_ARGS__
-	const char* code = MULTILINE(
-		function makeclick( id )
-		{
-			var name = id;
-			return function(){ avg.send( "onclick", name ); }
-		}
 
-		var elements = document.getElementsByTagName("*");
-
-		for (var i=0, max=elements.length; i < max; i++)
-		{
-			if( elements[i].id != "" )
-			{
-				elements[i].onclick = makeclick( elements[i].id );
-			}
-		}
-		);
-	*/
-	//frame->ExecuteJavaScript( code, __FUNCTION__, __LINE__ );
 }
 
 #endif

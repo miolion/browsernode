@@ -27,7 +27,6 @@ class MyMainDiv(app.MainDiv):
         player.loadPlugin("libavg_cefplugin")
         self.node = libavg_cefplugin.CEFnode(size=self.size, id="cef", parent=self)
         self.node.loadURL( "google.com" )
-        self.node.keyboardInput = True
         self.node.mouseInput = True
         player.subscribe(player.KEY_DOWN, self.onKey)
         player.subscribe(player.KEY_UP, self.onKey)

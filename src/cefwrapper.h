@@ -126,14 +126,12 @@ private:
 
 	CefRefPtr<AVGRenderHandler> mRenderHandler;
 
-	bool m_KeyboardInput;
 	bool m_MouseInput;
 
 public:
 
 	void Init( glm::uvec2 res, bool transparent );
 
-	void SetKBInput(bool kb){ m_KeyboardInput = kb; }
 	void SetMouseInput(bool mouse){ m_MouseInput = mouse; }
 
 	void LoadURL( std::string url );
@@ -146,17 +144,9 @@ public:
 	/*! \brief Should be called before application exit. */
 	static void Cleanup();
 
-	/*! \brief Used to add callback to onclick method of element with given DOM id.
-	 * \param DOMid ID of DOM element to bind callback to.
-	 * \param callback Callback to call when onclick is triggered.
-	 * \param userdata Callback userdata. */
-	void AddClickCallback( std::string DOMid, ClickCB callback, void* userdata );
-
-	void RemoveClickCallback( std::string DOMid );
-
-	/*! \brief Used to receive data from sunshine.send in JS.
+	/*! \brief Used to receive data from avg.send in JS.
 	 * \param cmd Command name to forward.
-	 * When sunshine.send is called with cmd param == cmd then the data param
+	 * When avg.send is called with cmd param == cmd then the data param
 	 * is forwarded along with the userdata to the given callback function. */
 	void AddGenericCallback( std::string cmd, GenericCB callback, void* userdata );
 

@@ -83,7 +83,6 @@ private:
 	bool m_SurfaceCreated;
 
 	bool m_Transparent;
-    bool m_KeyboardInput;
     bool m_MouseInput;
 
 };

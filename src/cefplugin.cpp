@@ -11,7 +11,7 @@ namespace avg
 /// CEFNode
 CEFNode::CEFNode(const ArgList& Args)
 	: RasterNode( "Node" ),
-	m_Transparent( false ), m_KeyboardInput( false ), m_MouseInput( false )
+	m_Transparent( false ), m_MouseInput( false )
 {
 	ObjectCounter::get()->incRef(&typeid(*this));
 
@@ -22,7 +22,6 @@ CEFNode::CEFNode(const ArgList& Args)
 
 	CEFWrapper::Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
 
-	SetKBInput( m_KeyboardInput );
 	SetMouseInput( m_MouseInput );
 }
 
@@ -142,17 +141,6 @@ bool CEFNode::getTransparent() const
     return m_Transparent;
 }
 
-bool CEFNode::getKeyboardInput() const
-{
-	return m_KeyboardInput;
-}
-
-void CEFNode::setKeyboardInput(bool keyb)
-{
-	SetKBInput( keyb );
-	m_KeyboardInput = keyb;
-}
-
 bool CEFNode::getMouseInput() const
 {
 	return m_MouseInput;
@@ -175,8 +163,6 @@ void CEFNode::registerType()
             ExportedObject::buildObject<CEFNode>)
         .addArg(Arg<bool>("transparent", false, false,
                 offsetof(CEFNode, m_Transparent)))
-		.addArg(Arg<bool>("keyboardInput", false, false,
-				offsetof(CEFNode, m_KeyboardInput)))
 		.addArg(Arg<bool>("mouseInput", false, false,
 				offsetof(CEFNode, m_MouseInput)));
 
@@ -193,8 +179,6 @@ BOOST_PYTHON_MODULE(CEFplugin)
     class_<CEFNode, bases<RasterNode>, boost::noncopyable>("CEFnode", no_init)
         .def("__init__", raw_constructor(createNode<CEFNodeName>))
 		.add_property("transparent", &CEFNode::getTransparent ) // Read only
-		.add_property("keyboardInput",
-			&CEFNode::getKeyboardInput, &CEFNode::setKeyboardInput )
 		.add_property("mouseInput",
 			&CEFNode::getMouseInput, &CEFNode::setMouseInput )
 		.def("sendKeyEvent", &CEFNode::sendKeyEvent )
