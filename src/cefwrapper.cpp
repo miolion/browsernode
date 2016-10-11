@@ -86,8 +86,8 @@ void CEFWrapper::AVGRenderHandler::Resize( glm::uvec2 size )
 {
 	if( size.x == 0 || size.y == 0 )
 	{
-		std::cout << "Warning, tried to set size to 0 " << std::endl;
-		return;
+		Logger::get()->logWarning(
+			"Tried resize texture to 0", Logger::category::PLUGIN );
 	}
 	mSize = size;
 
@@ -115,7 +115,8 @@ void CEFWrapper::AVGRenderHandler::OnPaint( CefRefPtr<CefBrowser> browser,
 	if( width != mRenderBitmap->getSize().x ||
 		height != mRenderBitmap->getSize().y )
 	{
-		std::cout << "Warning: texture size mismatch" << std::endl;
+		Logger::get()->logWarning(
+			"texture size mismatch", Logger::category::PLUGIN );
 		return;
 	}
 
@@ -145,6 +146,11 @@ void CEFWrapper::Init( glm::uvec2 res, bool transparent )
 void CEFWrapper::LoadURL( std::string url )
 {
 	mBrowser->GetMainFrame()->LoadURL(url);
+}
+
+void CEFWrapper::Refresh()
+{
+	mBrowser->Reload();
 }
 
 void CEFWrapper::Update()
@@ -390,20 +396,25 @@ void CEFWrapper::Cleanup()
 	CefShutdown();
 }
 
-void CEFWrapper::AddGenericCallback( std::string cmd, GenericCB cb, void* ud )
+void CEFWrapper::AddJSCallback( std::string cmd, boost::python::object func )
 {
-	mGenericCBs[cmd] = std::make_pair( cb, ud );
+	mJSCBs[cmd] = func;
 }
 
-void CEFWrapper::RemoveGenericCallback( std::string cmd )
+void CEFWrapper::RemoveJSCallback( std::string cmd )
 {
-	auto i = mGenericCBs.find( cmd );
+	auto i = mJSCBs.find( cmd );
 
-	if( i != mGenericCBs.end() )
+	if( i != mJSCBs.end() )
 	{
-		mGenericCBs.erase( i );
+		mJSCBs.erase( i );
 	}
-	//else LOG_WARNING() << "Tried to remove inexistent callback with name:" << cmd;
+	else
+	{
+		std::stringstream warn;
+		warn << "Tried to remove inexistent callback with name:" << cmd;
+		Logger::get()->logWarning( warn.str(), Logger::category::PLUGIN );
+	}
 }
 
 void CEFWrapper::ExecuteJS( std::string command )
@@ -419,22 +430,63 @@ bool CEFWrapper::OnProcessMessageReceived(
 {
 	std::string name = message->GetName();
 
-	auto i = mGenericCBs.find( name );
-	if( i != mGenericCBs.end() )
+	auto i = mJSCBs.find( name );
+	if( i != mJSCBs.end() )
 	{
 		std::string data = message->GetArgumentList()->GetString( 0 );
-		i->second.first( data ,i->second.second );
+		i->second( data );
+		return true;
 	}
-	//else LOG_WARNING() << "Couldn't find callback for cmd:" << name;
+	else
+	{
+		std::stringstream warn;
+		warn << "Couldn't find callback for cmd:" << name;
+		Logger::get()->logWarning( warn.str(), Logger::category::PLUGIN );
+	}
 	return false;
 }
-
-void CEFWrapper::OnLoadEnd(
+void CEFWrapper::OnPluginCrashed(
 	CefRefPtr< CefBrowser > browser,
-	CefRefPtr< CefFrame > frame,
-	int httpcode )
+	 const CefString& plugin_path )
 {
+	if( !mPluginCrashCB.is_none() )
+		mPluginCrashCB( plugin_path );
+}
 
+void CEFWrapper::OnRenderProcessTerminated(
+	CefRefPtr< CefBrowser > browser,
+	CefRequestHandler::TerminationStatus status )
+{
+	if( !mRendererCrashCB.is_none() )
+	{
+		std::string sstatus;
+		switch( status )
+		{
+		case TS_ABNORMAL_TERMINATION:
+			sstatus = "abnormal_exit";
+			break;
+
+		case TS_PROCESS_WAS_KILLED:
+			sstatus = "killed";
+			break;
+
+		case TS_PROCESS_CRASHED:
+			sstatus = "crashed";
+			break;
+		}
+
+		mRendererCrashCB( sstatus );
+	}
+}
+
+void CEFWrapper::OnLoadingStateChange(
+	CefRefPtr< CefBrowser > browser,
+	bool isLoading,
+	bool canGoBack,
+	bool canGoForward )
+{
+	if( !mLoadEndCB.is_none() && !isLoading )
+		mLoadEndCB();
 }
 
 #endif

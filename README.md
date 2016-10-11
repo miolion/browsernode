@@ -13,3 +13,38 @@ Browser node plugin for libavg via CEF
  - Cross-Platform. The resulting plugin must work on Windows 32/64 bit and Linux 32/64 bit platforms. Ideally, it should be possible to package the plugin for Debian/Ubuntu operating systems such that it can be built in a ppa or similar. For Windows, binary files that can be added to a libavg installation will suffice.
 
 The browser node will be used within a long-lived application, so attention to detail with regards to memory management is crucial. An application using the plugin should be able to run for weeks or months, creating and destroying browser nodes, without the plugin leaking memory.
+
+Constructor:
+Mandatory:
+   parent node
+   size
+Optional Parameters:
+   transparent true/false
+   audioMute true/false - TODO
+   scrollbars true/false - TODO
+   mouseInput true/false
+
+Methods:
+  loadURL( string URL )
+
+  sendKeyEvent - this is necessary because only python can listen to key events.
+    (avg::KeyEvent event )
+
+  refresh - TODO
+  executeJS(string script)
+
+  addJSCallback(
+    string - command to call on
+    callable(string data) ) - supports only 1 callback per command.
+
+  RemoveJSCallback(string command to remove)
+
+Properties:
+   transparent - ro - true/false
+   scrollbars - rw - true/false - TODO
+   audioMute - ro - true/false - TODO: propbably config value
+   mouseInput - rw - true/false
+
+   onFinishedLoading - rw - called when page finished loading.
+   onCrashed - rw - called when renderer process crashes with reason string.
+   onCrashedPlugin - rw - called when plugin crashes with plugin path.

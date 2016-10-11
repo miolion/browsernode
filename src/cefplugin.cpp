@@ -177,13 +177,23 @@ using namespace avg;
 BOOST_PYTHON_MODULE(CEFplugin)
 {
     class_<CEFNode, bases<RasterNode>, boost::noncopyable>("CEFnode", no_init)
-        .def("__init__", raw_constructor(createNode<CEFNodeName>))
-		.add_property("transparent", &CEFNode::getTransparent ) // Read only
-		.add_property("mouseInput",
+        .def( "__init__", raw_constructor(createNode<CEFNodeName>) )
+		.def( "cleanup", &CEFNode::Cleanup ).staticmethod( "cleanup" )
+		.add_property( "transparent", &CEFNode::getTransparent ) // Read only
+		.add_property( "mouseInput",
 			&CEFNode::getMouseInput, &CEFNode::setMouseInput )
-		.def("sendKeyEvent", &CEFNode::sendKeyEvent )
-		.def("loadURL", &CEFNode::LoadURL )
-		.def("cleanup", &CEFNode::Cleanup ).staticmethod( "cleanup" );
+		.add_property( "onLoadEnd",
+			&CEFNode::GetLoadEndCB, &CEFNode::SetLoadEndCB )
+		.add_property( "onPluginCrash",
+			&CEFNode::GetPluginCrashCB, &CEFNode::SetPluginCrashCB )
+		.add_property( "onRendererCrash",
+			&CEFNode::GetRendererCrashCB, &CEFNode::SetRendererCrashCB )
+		.def( "sendKeyEvent", &CEFNode::sendKeyEvent )
+		.def( "loadURL", &CEFNode::LoadURL )
+		.def( "refresh", &CEFNode::Refresh )
+		.def( "executeJS", &CEFNode::ExecuteJS )
+		.def( "addJSCallback", &CEFNode::AddJSCallback )
+		.def( "removeJSCallback", &CEFNode::RemoveJSCallback );
 }
 
 AVG_PLUGIN_API PyObject* registerPlugin()

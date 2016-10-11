@@ -59,6 +59,8 @@ public:
 
 #include <boost/assign.hpp>
 
+#include <base/Logger.h>
+
 #include <player/Player.h>
 #include <player/OGLSurface.h>
 #include <player/MouseEvent.h>
@@ -88,7 +90,6 @@ public:
 	public:
 		AVGRenderHandler( glm::uvec2 size );
 
-
 		/// CefRenderHandler inherited functions:
 		/*! \brief Used to acquire window size. */
 		bool GetViewRect( CefRefPtr<CefBrowser> browser, CefRect &rect );
@@ -111,14 +112,12 @@ public:
 
 private:
 
-	typedef void (*ClickCB)( void* );
-	typedef void (*GenericCB)( std::string data, void* );
+	// List of callbacks based on cmd passed to avg.send in JS.
+	std::unordered_map< std::string, boost::python::object > mJSCBs;
 
-	// List of callbacks with userdata based on DOM id.
-	std::unordered_map< std::string, std::pair< ClickCB, void* > > mClickCBs;
-
-	// List of callbacks with userdata based on cmd passed to sunshine.send in JS.
-	std::unordered_map< std::string, std::pair< GenericCB, void* > > mGenericCBs;
+	boost::python::object mLoadEndCB;
+	boost::python::object mPluginCrashCB;
+	boost::python::object mRendererCrashCB;
 
 	void Init();
 
@@ -129,30 +128,52 @@ private:
 	bool m_MouseInput;
 
 public:
+	/*! \brief Should be called before application exit. */
+	static void Cleanup();
 
 	void Init( glm::uvec2 res, bool transparent );
 
 	void SetMouseInput(bool mouse){ m_MouseInput = mouse; }
 
 	void LoadURL( std::string url );
+	void Refresh();
+
 	void Update();
 	void ScheduleTexUpload( avg::MCTexturePtr texture );
 	void Resize( glm::uvec2 size );
 
 	void ProcessEvent( avg::EventPtr ev );
 
-	/*! \brief Should be called before application exit. */
-	static void Cleanup();
 
 	/*! \brief Used to receive data from avg.send in JS.
 	 * \param cmd Command name to forward.
 	 * When avg.send is called with cmd param == cmd then the data param
 	 * is forwarded along with the userdata to the given callback function. */
-	void AddGenericCallback( std::string cmd, GenericCB callback, void* userdata );
+	void AddJSCallback( std::string cmd, boost::python::object function );
 
-	void RemoveGenericCallback( std::string cmd );
+	void RemoveJSCallback( std::string cmd );
 
 	void ExecuteJS( std::string command );
+
+
+	void SetLoadEndCB( boost::python::object callable )
+	{
+		mLoadEndCB = callable;
+	}
+	boost::python::object GetLoadEndCB(){ return mLoadEndCB; }
+
+	void SetPluginCrashCB( boost::python::object callable )
+	{
+		mPluginCrashCB = callable;
+	}
+	boost::python::object GetPluginCrashCB(){ return mPluginCrashCB; }
+
+	void SetRendererCrashCB( boost::python::object callable )
+	{
+		mRendererCrashCB = callable;
+	}
+	boost::python::object GetRendererCrashCB(){ return mRendererCrashCB; }
+
 
 
 	///*************************************************
@@ -181,16 +202,24 @@ public:
 
 	///*************************************************
 	/// CefRequestHandler inherited functions
-	//dodoododo
+	void OnPluginCrashed(
+		CefRefPtr< CefBrowser > browser,
+		 const CefString& plugin_path );
+
+	void OnRenderProcessTerminated(
+		CefRefPtr< CefBrowser > browser,
+		CefRequestHandler::TerminationStatus status );
 	///*************************************************
 
 	///*************************************************
 	/// CefLoadHandler inherited functions
 
-	// Called when a page finished loading.
-	void OnLoadEnd( CefRefPtr< CefBrowser > browser,
-		CefRefPtr< CefFrame > frame,
-		int httpStatusCode );
+	// isLoading parameter can be used to determine when stopped loading.
+	void OnLoadingStateChange(
+		CefRefPtr< CefBrowser > browser,
+		bool isLoading,
+		bool canGoBack,
+		bool canGoForward );
 
 	///*************************************************
 

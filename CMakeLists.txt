@@ -153,10 +153,15 @@ add_custom_command( TARGET avg_cefplugin POST_BUILD
 
 
 ###############################################################################
-# Copying CEF dependencies to Release directory.
+# Copying CEF dependencies and test files to Release directory.
 message( STATUS "Copying CEF dependencies to Release directory." )
 file(GLOB CEF_RESOURCES ${CEF_DIR}/Resources/*)
 file(INSTALL ${CEF_RESOURCES} DESTINATION ${RELEASE_DIR})
+
 file(GLOB CEF_RELEASE_FILES ${CEF_DIR}/Release/*)
 file(INSTALL ${CEF_RELEASE_FILES} DESTINATION ${RELEASE_DIR})
-file(INSTALL ${CMAKE_SOURCE_DIR}/src/testapp.py DESTINATION ${RELEASE_DIR})
+
+
+message( STATUS "Copying test files to Release directory.")
+file(GLOB TEST_FILES ${CMAKE_SOURCE_DIR}/src/test/*)
+file(INSTALL ${TEST_FILES} DESTINATION ${RELEASE_DIR})
