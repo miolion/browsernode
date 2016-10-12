@@ -25,36 +25,49 @@ os.environ['AVG_LOG_CATEGORIES']="""APP:DBG CONFIG:DBG DEPREC:DBG EVENTS:DBG
 class MyMainDiv(app.MainDiv):
     def onInit(self):
         player.loadPlugin("libavg_cefplugin")
-        self.node = libavg_cefplugin.CEFnode(size=self.size, id="cef", parent=self)
-        self.node.addJSCallback( "load", self.onLoad )
-        self.node.onPluginCrash = self.onPluginCrash;
-        self.node.onRendererCrash = self.onRendererCrash;
-        self.node.onLoadEnd = self.onLoadEnd;
+        self.remote = libavg_cefplugin.CEFnode(size=self.size, id="remote", parent=self)
+        self.local = libavg_cefplugin.CEFnode(size=self.size, transparent=True, id="local", parent=self)
+
+        self.local.addJSCallback( "load", self.onLoad )
+
+        self.local.onPluginCrash = self.onPluginCrash;
+        self.local.onRendererCrash = self.onRendererCrash;
+
+        self.remote.onPluginCrash = self.onPluginCrash;
+        self.remote.onRendererCrash = self.onRendererCrash;
+
+        self.local.onLoadEnd = self.onLoadEnd;
+
         url = "file:///"
         url += os.getcwd()
         url += "/testpage.html"
-        self.node.loadURL( url )
-        self.node.mouseInput = True
+        self.local.loadURL( url )
+        self.remote.loadURL( "youtube.com" )
+
+        self.remote.mouseInput = True
         player.subscribe(player.KEY_DOWN, self.onKey)
         player.subscribe(player.KEY_UP, self.onKey)
         pass
 
     def onKey(self, keyevent):
-        self.node.sendKeyEvent( keyevent )
+        self.remote.sendKeyEvent( keyevent )
         pass
 
     def onLoad(self, data):
         print( "onload called with:" + data )
-        self.node.executeJS("document.getElementById('main').innerHTML = 'Hello JS';")
 
-        self.node.removeJSCallback( "load" )
+        # This changes the document to display Hello JS.
+        # It still won't be displayed, because we refresh after this.
+        self.local.executeJS("document.getElementById('main').innerHTML = 'Hello JS';")
+
+        self.local.removeJSCallback( "load" )
         # Try to make this function be called again.
         # Should not happen as we have unsubscribed.
         # Should print a warning instead.
-        self.node.refresh()
+        self.local.refresh()
         pass
 
-    def onRendererCrash(self, reason ):
+    def onRendererCrash(self, reason):
         print( "renderer was terminated:" + reason )
         pass
 

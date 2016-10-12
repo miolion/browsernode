@@ -20,6 +20,8 @@ CEFNode::CEFNode(const ArgList& Args)
 
 	Player::get()->registerPreRenderListener( this );
 
+	std::cout << "Trasparent" << m_Transparent << std::endl;
+
 	CEFWrapper::Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
 
 	SetMouseInput( m_MouseInput );
@@ -29,7 +31,6 @@ CEFNode::~CEFNode()
 {
 	ObjectCounter::get()->decRef(&typeid(*this));
 	Player::get()->unregisterPreRenderListener(this);
-	std::cout << "destructor called" << std::endl;
 }
 
 void CEFNode::connectDisplay()

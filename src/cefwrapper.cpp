@@ -392,7 +392,6 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 
 void CEFWrapper::Cleanup()
 {
-	std::cout << "Cleaning up" << std::endl;
 	CefShutdown();
 }
 
