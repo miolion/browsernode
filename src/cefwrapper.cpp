@@ -48,14 +48,15 @@ bool CEFApp::Execute(
 	{
 		if( arguments.size() != 2 )
 		{
-			//LOG_WARNING() << "Incorrect number of arguments: " << arguments.size()
-				//<< " Expected: 2";
+			std::cout << "Warning: Incorrect number of arguments: " 
+				<< arguments.size() << " Expected: 2" << std::endl;
 			return false;
 		}
 
 		if( !arguments[0]->IsString() || !arguments[1]->IsString() )
 		{
-			//LOG_WARNING() << "Argument incorrect type. Expected strings.";
+			std::cerr << "Warning: Argument incorrect type. Expected strings." 
+				<< std::endl;
 			return false;
 		}
 
@@ -71,7 +72,8 @@ bool CEFApp::Execute(
 		return true;
 	}
 
-	//LOG_WARNING() << "Function: \"" << name.ToString() << "\" doesn't exist.";
+	std::cerr << "Warning:Function: \"" << name.ToString() << "\" doesn't exist."
+		<< std::endl;
 	return false;
 }
 
@@ -86,8 +88,7 @@ void CEFWrapper::AVGRenderHandler::Resize( glm::uvec2 size )
 {
 	if( size.x == 0 || size.y == 0 )
 	{
-		Logger::get()->logWarning(
-			"Tried resize texture to 0", Logger::category::PLUGIN );
+		std::cerr << "Warning: Tried resize texture to 0" << std::endl;
 	}
 	mSize = size;
 
@@ -115,8 +116,7 @@ void CEFWrapper::AVGRenderHandler::OnPaint( CefRefPtr<CefBrowser> browser,
 	if( width != mRenderBitmap->getSize().x ||
 		height != mRenderBitmap->getSize().y )
 	{
-		Logger::get()->logWarning(
-			"texture size mismatch", Logger::category::PLUGIN );
+		std::cerr << "Warning: texture size mismatch" << std::endl;
 		return;
 	}
 
@@ -410,9 +410,8 @@ void CEFWrapper::RemoveJSCallback( std::string cmd )
 	}
 	else
 	{
-		std::stringstream warn;
-		warn << "Tried to remove inexistent callback with name:" << cmd;
-		Logger::get()->logWarning( warn.str(), Logger::category::PLUGIN );
+		std::cerr << "Warning: Tried to remove inexistent callback with name:" 
+			<< cmd << std::endl;
 	}
 }
 
@@ -438,9 +437,8 @@ bool CEFWrapper::OnProcessMessageReceived(
 	}
 	else
 	{
-		std::stringstream warn;
-		warn << "Couldn't find callback for cmd:" << name;
-		Logger::get()->logWarning( warn.str(), Logger::category::PLUGIN );
+		std::cerr << "Warning: Couldn't find callback for cmd:" << name
+			<< std::endl;
 	}
 	return false;
 }

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <map>
 
+#include <iostream>
 #include <string>
 #include <locale>
 #include <codecvt>
@@ -59,7 +60,7 @@ public:
 
 #include <boost/assign.hpp>
 
-#include <base/Logger.h>
+//#include <base/Logger.h>
 
 #include <player/Player.h>
 #include <player/OGLSurface.h>

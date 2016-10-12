@@ -20,8 +20,6 @@ CEFNode::CEFNode(const ArgList& Args)
 
 	Player::get()->registerPreRenderListener( this );
 
-	std::cout << "Trasparent" << m_Transparent << std::endl;
-
 	CEFWrapper::Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
 
 	SetMouseInput( m_MouseInput );

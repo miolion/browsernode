@@ -26,7 +26,7 @@ class MyMainDiv(app.MainDiv):
     def onInit(self):
         player.loadPlugin("libavg_cefplugin")
         self.remote = libavg_cefplugin.CEFnode(size=self.size, id="remote", parent=self)
-        self.local = libavg_cefplugin.CEFnode(size=self.size, transparent=True, id="local", parent=self)
+        self.local = libavg_cefplugin.CEFnode(size=(100,100), transparent=True, id="local", parent=self)
 
         self.local.addJSCallback( "load", self.onLoad )
 
