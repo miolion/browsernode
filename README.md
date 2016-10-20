@@ -15,14 +15,13 @@ Browser node plugin for libavg via CEF
 The browser node will be used within a long-lived application, so attention to detail with regards to memory management is crucial. An application using the plugin should be able to run for weeks or months, creating and destroying browser nodes, without the plugin leaking memory.
 
 Constructor:
-Mandatory:
-   parent node
-   size
-Optional Parameters:
-   transparent true/false
-   audioMute true/false - TODO
-   scrollbars true/false - TODO
-   mouseInput true/false
+	Mandatory:
+	   parent node
+	   size
+	Optional Parameters:
+	   transparent true/false
+	   scrollbars true/false
+	   mouseInput true/false
 
 Methods:
   loadURL( string URL )
@@ -30,21 +29,47 @@ Methods:
   sendKeyEvent - this is necessary because only python can listen to key events.
     (avg::KeyEvent event )
 
-  refresh - TODO
+  refresh
   executeJS(string script)
 
   addJSCallback(
     string - command to call on
     callable(string data) ) - supports only 1 callback per command.
 
-  RemoveJSCallback(string command to remove)
+  RemoveJSCallback(string command_to_remove)
 
 Properties:
    transparent - ro - true/false
-   scrollbars - rw - true/false - TODO
-   audioMute - ro - true/false - TODO: propbably config value
+   scrollbars - rw - true/false
+   audioMute - ro - true/false - Set in avg_cefplugin.ini
    mouseInput - rw - true/false
+   debuggerPort - ro - int - Port for chromium remote developer console.
 
    onFinishedLoading - rw - called when page finished loading.
    onCrashed - rw - called when renderer process crashes with reason string.
    onCrashedPlugin - rw - called when plugin crashes with plugin path.
+
+
+
+Config file: ./avg_cefplugin.ini - in folder where cefhelper is.
+It enables adding any command-line argument via ini categories.
+Everything in [switches] will be added to command line switches if its value is true.
+And everything in [value_switches] will be added to switches with the specified value.
+Hyphens('-') Aren't needed before switches. So "mute-audio" and not "--mute-audio".
+Here is an example describing options:
+
+	mute_audio = true/(anything else)
+	debugger_port = <port> - defaults to 8088
+
+	[switches]
+	<switchname> = true/(anything else)
+
+	[value_switches]
+	<switchname> = <switchvalue>
+
+
+For proxy configuration or other options refer to:
+https://www.chromium.org/developers/design-documents/network-settings#TOC-Command-line-options-for-proxy-settings
+
+For debugging use chromium remote debugging console with port specified in config.
+Then just type localhost:<port> into your regular browser.

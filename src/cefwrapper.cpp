@@ -6,6 +6,13 @@ namespace avg
 ///****************************************************************
 // CefApp
 
+CEFApp::CEFApp() : mMainInstance( false )
+{}
+
+CEFApp::CEFApp( bool a, const INI::Level& args )
+	: mMainInstance( true ), mAudioMuted( a ), mAdditionalArguments( args )
+{}
+
 void CEFApp::OnBeforeCommandLineProcessing(
 	const CefString& processtype, CefRefPtr< CefCommandLine > cmd )
 {
@@ -16,6 +23,25 @@ void CEFApp::OnBeforeCommandLineProcessing(
 	cmd->AppendSwitch("disable-gpu");
 	cmd->AppendSwitch("disable-gpu-compositing");
 	cmd->AppendSwitch("enable-begin-frame-scheduling");
+
+	if( mMainInstance )
+	{
+		if( mAudioMuted )
+			cmd->AppendSwitch("mute-audio");
+		
+		const INI::Level& switches = mAdditionalArguments( "switches" );
+		for( auto i = switches.values.begin(); i != switches.values.end(); ++i )
+		{
+			if( i->second == "true" )
+				cmd->AppendSwitch( i->first );
+		}
+
+		const INI::Level& swvals = mAdditionalArguments( "value_switches" );
+		for( auto i = swvals.values.begin(); i != swvals.values.end(); ++i )
+		{
+			cmd->AppendSwitchWithValue( i->first, i->second );
+		}
+	}
 }
 
 void CEFApp::OnWebKitInitialized()
@@ -146,11 +172,13 @@ void CEFWrapper::Init( glm::uvec2 res, bool transparent )
 void CEFWrapper::LoadURL( std::string url )
 {
 	mBrowser->GetMainFrame()->LoadURL(url);
+	setScrollbarsEnabled( m_ScrollbarsEnabled );
 }
 
 void CEFWrapper::Refresh()
 {
 	mBrowser->Reload();
+	setScrollbarsEnabled( m_ScrollbarsEnabled );
 }
 
 void CEFWrapper::Update()
@@ -419,6 +447,25 @@ void CEFWrapper::ExecuteJS( std::string command )
 {
 	CefRefPtr<CefFrame> frame = mBrowser->GetMainFrame();
 	frame->ExecuteJavaScript( command, frame->GetURL(), 0 );
+}
+
+bool CEFWrapper::getScrollbarsEnabled() const
+{
+	return m_ScrollbarsEnabled;
+}
+
+void CEFWrapper::setScrollbarsEnabled(bool scroll)
+{
+	if( scroll )
+	{
+		ExecuteJS( "document.documentElement.style.overflow = 'auto';" );
+	}
+	else
+	{
+		ExecuteJS( "document.documentElement.style.overflow = 'hidden';" );
+	}
+
+	m_ScrollbarsEnabled = scroll;
 }
 
 bool CEFWrapper::OnProcessMessageReceived(

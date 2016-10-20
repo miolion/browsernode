@@ -14,6 +14,8 @@
 #include <include/cef_client.h>
 #include <include/cef_app.h>
 
+#include "ini.hpp"
+
 namespace avg
 {
 
@@ -21,7 +23,14 @@ namespace avg
 	Should be allocated and passed to CefExecuteProcess, CefInitialize in main.*/
 class CEFApp : public ::CefApp, CefV8Handler, CefRenderProcessHandler
 {
+private:
+	bool mMainInstance;
+	bool mAudioMuted;
+	INI::Level mAdditionalArguments;
+
 public:
+	CEFApp();
+	CEFApp( bool audiomuted, const INI::Level& level );
 
 	/*! \brief Returns self as RenderProcessHandler to set JS extensions.
 		* Inherited from CefApp. */
@@ -128,6 +137,8 @@ private:
 
 	bool m_MouseInput;
 
+	bool m_ScrollbarsEnabled;
+
 public:
 	/*! \brief Should be called before application exit. */
 	static void Cleanup();
@@ -174,6 +185,11 @@ public:
 		mRendererCrashCB = callable;
 	}
 	boost::python::object GetRendererCrashCB(){ return mRendererCrashCB; }
+
+	
+	/*! \brief Sets scrollbar visibility. Applies after reload. */
+	void setScrollbarsEnabled(bool scroll);
+	bool getScrollbarsEnabled() const;
 
 
 

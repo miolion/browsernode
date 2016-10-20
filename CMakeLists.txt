@@ -73,7 +73,8 @@ link_directories(
 ##############################################################################
 # HELPER
 
-set(HELPERSOURCES src/libavg_cefhelper.cpp src/cefwrapper.cpp src/cefwrapper.h)
+set(HELPERSOURCES src/libavg_cefhelper.cpp src/cefwrapper.cpp src/cefwrapper.h
+	 src/ini.hpp)
 
 add_executable(avg_cefhelper ${HELPERSOURCES})
 
@@ -97,7 +98,7 @@ add_custom_command( TARGET avg_cefhelper POST_BUILD
 # PLUGIN
 
 set(PLUGINSOURCES src/cefwrapper.cpp src/cefwrapper.h
-  src/cefplugin.cpp src/cefplugin.h)
+  src/cefplugin.cpp src/cefplugin.h src/ini.hpp )
 
 add_library(avg_cefplugin MODULE ${PLUGINSOURCES})
 set_target_properties(avg_cefplugin PROPERTIES PREFIX "lib")

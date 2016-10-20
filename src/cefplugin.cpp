@@ -7,11 +7,15 @@ using namespace boost::python;
 namespace avg
 {
 
+bool CEFNode::g_AudioMuted;
+INI::Level CEFNode::g_AdditionalArguments;
+uint16_t CEFNode::g_DebuggerPort;
+
 ///*****************************************************************************
 /// CEFNode
 CEFNode::CEFNode(const ArgList& Args)
 	: RasterNode( "Node" ),
-	m_Transparent( false ), m_MouseInput( false )
+	m_Transparent( false ), m_MouseInput( false ), m_InitScrollbarsEnabled( true )
 {
 	ObjectCounter::get()->incRef(&typeid(*this));
 
@@ -21,6 +25,8 @@ CEFNode::CEFNode(const ArgList& Args)
 	Player::get()->registerPreRenderListener( this );
 
 	CEFWrapper::Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
+
+	setScrollbarsEnabled( m_InitScrollbarsEnabled );
 
 	SetMouseInput( m_MouseInput );
 }
@@ -140,6 +146,16 @@ bool CEFNode::getTransparent() const
     return m_Transparent;
 }
 
+bool CEFNode::getAudioMuted() const
+{
+	return g_AudioMuted;
+}
+
+int CEFNode::getDebuggerPort() const
+{
+	return g_DebuggerPort;
+}
+
 bool CEFNode::getMouseInput() const
 {
 	return m_MouseInput;
@@ -163,7 +179,9 @@ void CEFNode::registerType()
         .addArg(Arg<bool>("transparent", false, false,
                 offsetof(CEFNode, m_Transparent)))
 		.addArg(Arg<bool>("mouseInput", false, false,
-				offsetof(CEFNode, m_MouseInput)));
+				offsetof(CEFNode, m_MouseInput)))
+		.addArg(Arg<bool>("scrollbars", true, false,
+				offsetof(CEFNode, m_InitScrollbarsEnabled)));
 
     const char* allowedParentNodeNames[] = {"avg", "div", 0};
     avg::TypeRegistry::get()->registerType(def, allowedParentNodeNames);
@@ -178,7 +196,13 @@ BOOST_PYTHON_MODULE(CEFplugin)
     class_<CEFNode, bases<RasterNode>, boost::noncopyable>("CEFnode", no_init)
         .def( "__init__", raw_constructor(createNode<CEFNodeName>) )
 		.def( "cleanup", &CEFNode::Cleanup ).staticmethod( "cleanup" )
-		.add_property( "transparent", &CEFNode::getTransparent ) // Read only
+
+		// Read only
+		.add_property( "transparent", &CEFNode::getTransparent )
+		.add_property( "audioMute", &CEFNode::getAudioMuted )
+		.add_property( "debuggerPort", &CEFNode::getDebuggerPort )
+
+		// Read-write
 		.add_property( "mouseInput",
 			&CEFNode::getMouseInput, &CEFNode::setMouseInput )
 		.add_property( "onLoadEnd",
@@ -187,6 +211,10 @@ BOOST_PYTHON_MODULE(CEFplugin)
 			&CEFNode::GetPluginCrashCB, &CEFNode::SetPluginCrashCB )
 		.add_property( "onRendererCrash",
 			&CEFNode::GetRendererCrashCB, &CEFNode::SetRendererCrashCB )
+		.add_property( "scrollbars",
+			&CEFNode::getScrollbarsEnabled, &CEFNode::setScrollbarsEnabled )
+
+		// Functions
 		.def( "sendKeyEvent", &CEFNode::sendKeyEvent )
 		.def( "loadURL", &CEFNode::LoadURL )
 		.def( "refresh", &CEFNode::Refresh )
@@ -200,6 +228,28 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 	// Here we must initialize CEF multiprocess system.
 	// The subprocesses are started by CefInitialize.
 
+	// First load options from ini.
+	INI::Level ConfigTop;
+	try
+	{
+		// Set defaults in case can't load ini.
+		CEFNode::g_AudioMuted = false;
+		CEFNode::g_DebuggerPort = 8088;
+
+		INI::Parser conf( "./avg_cefplugin.ini" );
+
+		CEFNode::g_AdditionalArguments = conf.top();
+
+		CEFNode::g_AudioMuted = conf.top()["mute_audio"] == "true";
+
+		std::string port = conf.top()["debugger_port"];
+		CEFNode::g_DebuggerPort = (uint16_t)atol( port.c_str() );
+	} 
+	catch( std::runtime_error e )
+	{
+		std::cerr << "Error while reading config:" << e.what() << std::endl;
+	}
+
 #ifndef _WIN32
 	CefMainArgs args( 0, nullptr ); //argc, argv);
 #else
@@ -207,10 +257,13 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 	CefMainArgs args(GetModuleHandle(nullptr));
 #endif
 
-	CefRefPtr< CEFApp > app = new CEFApp();
+	CefRefPtr< CEFApp > app = new CEFApp( 
+		CEFNode::g_AudioMuted, CEFNode::g_AdditionalArguments );
+
+	if( CEFNode::g_DebuggerPort == 0 ) CEFNode::g_DebuggerPort = 8088;
 
 	CefSettings settings;
-	settings.remote_debugging_port = 8088;
+	settings.remote_debugging_port = CEFNode::g_DebuggerPort;
 
 	settings.no_sandbox = 1;
 	settings.windowless_rendering_enabled = 1;

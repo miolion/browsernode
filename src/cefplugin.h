@@ -33,6 +33,8 @@
 #include <sstream>
 #include <iomanip>
 
+#include <ini.hpp>
+
 #include "cefwrapper.h"
 
 namespace avg
@@ -75,6 +77,14 @@ public:
 
     void sendKeyEvent( KeyEventPtr keyevent );
 
+	bool getAudioMuted() const;
+	int getDebuggerPort() const;
+
+	// Read from config, but available read-only in python.
+	static bool g_AudioMuted;
+	static INI::Level g_AdditionalArguments;
+	static uint16_t g_DebuggerPort;
+
 private:
 
 	glm::vec2 m_LastSize;
@@ -85,6 +95,9 @@ private:
 	bool m_Transparent;
     bool m_MouseInput;
 
+	// Used only to support this setting from constructor.
+	// Doesn't reflect actual value afterwards.
+	bool m_InitScrollbarsEnabled;
 };
 
 } // namespace avg

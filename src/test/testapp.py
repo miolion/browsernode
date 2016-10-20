@@ -26,9 +26,11 @@ class MyMainDiv(app.MainDiv):
     def onInit(self):
         player.loadPlugin("libavg_cefplugin")
         self.remote = libavg_cefplugin.CEFnode(size=self.size, id="remote", parent=self)
-        self.local = libavg_cefplugin.CEFnode(size=(100,100), transparent=True, id="local", parent=self)
+        self.local = libavg_cefplugin.CEFnode(size=(self.size.x,100), transparent=True, id="local", parent=self)
 
-        self.local.addJSCallback( "load", self.onLoad )
+        self.local.addJSCallback( "setscroll", self.onSetScroll )
+        self.local.addJSCallback( "refresh", self.onRefresh )
+        self.local.addJSCallback( "loadurl", self.onLoadURL )
 
         self.local.onPluginCrash = self.onPluginCrash;
         self.local.onRendererCrash = self.onRendererCrash;
@@ -45,26 +47,28 @@ class MyMainDiv(app.MainDiv):
         self.remote.loadURL( "youtube.com" )
 
         self.remote.mouseInput = True
+        self.local.mouseInput = True
         player.subscribe(player.KEY_DOWN, self.onKey)
         player.subscribe(player.KEY_UP, self.onKey)
         pass
 
     def onKey(self, keyevent):
         self.remote.sendKeyEvent( keyevent )
+        self.local.sendKeyEvent( keyevent )
         pass
 
-    def onLoad(self, data):
-        print( "onload called with:" + data )
+    def onSetScroll(self, data):
+        if data == "enable":
+            self.remote.scrollbars = True
+        elif data == "disable":
+            self.remote.scrollbars = False
+        pass
 
-        # This changes the document to display Hello JS.
-        # It still won't be displayed, because we refresh after this.
-        self.local.executeJS("document.getElementById('main').innerHTML = 'Hello JS';")
+    def onLoadURL( self, data ):
+        self.remote.loadURL( data )
 
-        self.local.removeJSCallback( "load" )
-        # Try to make this function be called again.
-        # Should not happen as we have unsubscribed.
-        # Should print a warning instead.
-        self.local.refresh()
+    def onRefresh(self, data):
+        self.remote.refresh()
         pass
 
     def onRendererCrash(self, reason):
