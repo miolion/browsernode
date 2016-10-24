@@ -124,8 +124,11 @@ void CEFNode::render(GLContext* context, const glm::mat4& transform)
     blt32(context, transform);
 }
 
+static ProfilingZoneID updatepzid("CEFnode::update");
+
 void CEFNode::onPreRender()
 {
+	ScopeTimer Timer(updatepzid);
 	Update();
 }
 
@@ -252,7 +255,7 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 
 		std::string port = conf.top()["debugger_port"];
 		CEFNode::g_DebuggerPort = (uint16_t)atol( port.c_str() );
-	} 
+	}
 	catch( std::runtime_error e )
 	{
 		std::cerr << "Error while reading config:" << e.what() << std::endl;
@@ -265,7 +268,7 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 	CefMainArgs args(GetModuleHandle(nullptr));
 #endif
 
-	CefRefPtr< CEFApp > app = new CEFApp( 
+	CefRefPtr< CEFApp > app = new CEFApp(
 		CEFNode::g_AudioMuted, CEFNode::g_AdditionalArguments );
 
 	if( CEFNode::g_DebuggerPort == 0 ) CEFNode::g_DebuggerPort = 8088;
