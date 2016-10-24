@@ -103,7 +103,8 @@ set(PLUGINSOURCES src/cefwrapper.cpp src/cefwrapper.h
 add_library(avg_cefplugin MODULE ${PLUGINSOURCES})
 set_target_properties(avg_cefplugin PROPERTIES PREFIX "lib")
 
-target_include_directories( avg_cefplugin PRIVATE ${AVG_DIR}/src/ )
+target_include_directories( avg_cefplugin PRIVATE ${AVG_DIR}/src/
+${AVG_BUILD_DIR}/src/ )
 
 if(NOT PLATFORM_WINDOWS)
   target_link_libraries( avg_cefplugin
