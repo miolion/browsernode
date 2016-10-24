@@ -78,9 +78,12 @@ void CEFNode::createSurface()
 	newSurface();
 }
 
+static ProfilingZoneID prerenderpzid("CEFnode::prerender");
+
 void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
         float parentEffectiveOpacity)
 {
+	ScopeTimer timer( prerenderpzid );
 	if (!m_SurfaceCreated || getSize() != m_LastSize)
 	{
 		std::cout << "prerender - recreate with x"
@@ -113,7 +116,7 @@ void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
     calcVertexArray(pVA);
 }
 
-static ProfilingZoneID pzid("BrowserNode::render");
+static ProfilingZoneID pzid("CEFnode::render");
 
 void CEFNode::render(GLContext* context, const glm::mat4& transform)
 {

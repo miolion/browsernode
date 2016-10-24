@@ -2,25 +2,28 @@
 # -*- coding: utf-8 -*-
 
 import os
-from libavg import app, player
+from libavg import app, player, logger
 import libavg
 
-'''libavg.logger.configureCategory( "APP", "DBG" )
-libavg.logger.configureCategory( "CONFIG", "DBG" )
-libavg.logger.configureCategory( "DEPREC", "DBG" )
-libavg.logger.configureCategory( "EVENTS", "DBG" )
-libavg.logger.configureCategory( "MEMORY", "DBG" )
-libavg.logger.configureCategory( "NONE", "DBG" )
-libavg.logger.configureCategory( "PROFILE", "WARNING" )
-libavg.logger.configureCategory( "PRIFLE_V", "WARNING" )
-libavg.logger.configureCategory( "PLUGIN", "DBG" )
-libavg.logger.configureCategory( "PLAYER", "DBG" )
-libavg.logger.configureCategory( "SHADER", "DBG" )
-libavg.logger.configureCategory( "VIDEO", "DBG" )'''
+# severity numbers probably have an enum somewhere.
+# 0 is none. 10 is debug. 30 is warning ...
+libavg.logger.configureCategory( "APP", 30 )
+libavg.logger.configureCategory( "CONFIG", 30 )
+libavg.logger.configureCategory( "DEPREC", 30 )
+libavg.logger.configureCategory( "EVENTS", 30 )
+libavg.logger.configureCategory( "MEMORY", 30 )
+libavg.logger.configureCategory( "NONE", 30 )
+libavg.logger.configureCategory( "PROFILE", 10 )
+libavg.logger.configureCategory( "PRIFLE_V", 10 )
+libavg.logger.configureCategory( "PLUGIN", 30 )
+libavg.logger.configureCategory( "PLAYER", 30 )
+libavg.logger.configureCategory( "SHADER", 30 )
+libavg.logger.configureCategory( "VIDEO", 30 )
 
-os.environ['AVG_LOG_CATEGORIES']="""APP:DBG CONFIG:DBG DEPREC:DBG EVENTS:DBG
- MEMORY:DBG NONE:DBG PROFILE:WARNING PROFILE_V:WARNING PLUGIN:DBG PLAYER:DBG
- SHADER:DBG VIDEO:DBG"""
+
+'''os.environ['AVG_LOG_CATEGORIES']="""APP:DBG CONFIG:DBG DEPREC:DBG EVENTS:DBG
+ MEMORY:DBG NONE:DBG PROFILE:DBG PROFILE_V:DBG PLUGIN:DBG PLAYER:DBG
+ SHADER:DBG VIDEO:DBG"""'''
 
 class MyMainDiv(app.MainDiv):
     def onInit(self):
