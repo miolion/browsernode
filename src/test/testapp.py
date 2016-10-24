@@ -25,12 +25,13 @@ os.environ['AVG_LOG_CATEGORIES']="""APP:DBG CONFIG:DBG DEPREC:DBG EVENTS:DBG
 class MyMainDiv(app.MainDiv):
     def onInit(self):
         player.loadPlugin("libavg_cefplugin")
-        self.remote = libavg_cefplugin.CEFnode(size=self.size, id="remote", parent=self)
+        self.remote = libavg_cefplugin.CEFnode(pos=(0,100), size=(self.size.x,self.size.y-100), id="remote", parent=self)
         self.local = libavg_cefplugin.CEFnode(size=(self.size.x,100), transparent=True, id="local", parent=self)
 
         self.local.addJSCallback( "setscroll", self.onSetScroll )
         self.local.addJSCallback( "refresh", self.onRefresh )
         self.local.addJSCallback( "loadurl", self.onLoadURL )
+        self.local.addJSCallback( "setvolume", self.onSetVolume )
 
         self.local.onPluginCrash = self.onPluginCrash;
         self.local.onRendererCrash = self.onRendererCrash;
@@ -69,6 +70,10 @@ class MyMainDiv(app.MainDiv):
 
     def onRefresh(self, data):
         self.remote.refresh()
+        pass
+
+    def onSetVolume(self, data):
+        self.remote.volume = float(data)
         pass
 
     def onRendererCrash(self, reason):

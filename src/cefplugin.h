@@ -98,6 +98,7 @@ private:
 	// Used only to support this setting from constructor.
 	// Doesn't reflect actual value afterwards.
 	bool m_InitScrollbarsEnabled;
+	double m_InitVolume;
 };
 
 } // namespace avg

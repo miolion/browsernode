@@ -172,13 +172,11 @@ void CEFWrapper::Init( glm::uvec2 res, bool transparent )
 void CEFWrapper::LoadURL( std::string url )
 {
 	mBrowser->GetMainFrame()->LoadURL(url);
-	setScrollbarsEnabled( m_ScrollbarsEnabled );
 }
 
 void CEFWrapper::Refresh()
 {
 	mBrowser->Reload();
-	setScrollbarsEnabled( m_ScrollbarsEnabled );
 }
 
 void CEFWrapper::Update()
@@ -197,7 +195,7 @@ void CEFWrapper::Resize( glm::uvec2 size )
 	mBrowser->GetHost()->WasResized();
 }
 
-void CEFWrapper::ProcessEvent( EventPtr ev )
+void CEFWrapper::ProcessEvent( EventPtr ev, Node* cefnode )
 {
 	MouseEventPtr mouse = boost::dynamic_pointer_cast<MouseEvent>(ev);
 	MouseWheelEventPtr wheel = boost::dynamic_pointer_cast<MouseWheelEvent>(ev);
@@ -216,7 +214,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 
 	if( m_MouseInput && mouse )
 	{
-		glm::vec2 coords = mouse->getPos();
+		glm::vec2 coords = cefnode->getRelPos( mouse->getPos() );
 
 		CefMouseEvent cefevent;
 		cefevent.x = (int)coords.x;
@@ -255,7 +253,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev )
 	if( m_MouseInput && wheel )
 	{
 		CefMouseEvent cefevent;
-		glm::vec2 pos = wheel->getPos();
+		glm::vec2 pos = cefnode->getRelPos( wheel->getPos() );
 		cefevent.x = (int)pos.x;
 		cefevent.y = (int)pos.y;
 
@@ -454,18 +452,57 @@ bool CEFWrapper::getScrollbarsEnabled() const
 	return m_ScrollbarsEnabled;
 }
 
-void CEFWrapper::setScrollbarsEnabled(bool scroll)
+void CEFWrapper::HideScrollbars( CefRefPtr<CefFrame> frame )
+{
+	frame->ExecuteJavaScript( "document.documentElement.style.overflow = 'hidden';",
+		frame->GetURL(), __LINE__ );
+	m_ScrollbarsEnabled = false;
+}
+
+void CEFWrapper::ShowScrollbars( CefRefPtr<CefFrame> frame )
+{
+	frame->ExecuteJavaScript( "document.documentElement.style.overflow = 'auto';",
+		frame->GetURL(), __LINE__ );
+	m_ScrollbarsEnabled = true;
+}
+
+void CEFWrapper::setScrollbarsEnabled( bool scroll )
 {
 	if( scroll )
-	{
-		ExecuteJS( "document.documentElement.style.overflow = 'auto';" );
-	}
+		ShowScrollbars( mBrowser->GetMainFrame() );
 	else
-	{
-		ExecuteJS( "document.documentElement.style.overflow = 'hidden';" );
-	}
+		HideScrollbars( mBrowser->GetMainFrame() );
+}
 
-	m_ScrollbarsEnabled = scroll;
+void CEFWrapper::SetVolumeInternal( CefRefPtr<CefFrame> frame, double volume )
+{
+	std::stringstream script;
+	script << "var setvol = (function(){var volume = " << volume << ";\
+		var audionodes = document.getElementsByTagName('audio');\
+		for( var i = 0; i < audionodes.length; ++i )\
+		{\
+			audionodes[i].volume = volume;\
+		}\
+		var videonodes = document.getElementsByTagName('video');\
+		for( var i = 0; i < videonodes.length; ++i )\
+		{\
+			videonodes[i].volume = volume;\
+			}}); setvol();\
+		document.addEventListener('DOMContentLoaded', setvol, false);";
+
+	frame->ExecuteJavaScript( script.str(), frame->GetURL(), __LINE__ );
+
+	m_Volume = volume;
+}
+
+void CEFWrapper::setVolume( double volume )
+{
+	SetVolumeInternal( mBrowser->GetMainFrame(), volume );
+}
+
+double CEFWrapper::getVolume() const
+{
+	return m_Volume;
 }
 
 bool CEFWrapper::OnProcessMessageReceived(
@@ -529,8 +566,19 @@ void CEFWrapper::OnLoadingStateChange(
 	bool canGoBack,
 	bool canGoForward )
 {
-	if( !mLoadEndCB.is_none() && !isLoading )
+	// Just in case something turns volume back on during loading.
+	SetVolumeInternal( browser->GetMainFrame(), m_Volume );
+	if( !isLoading && !mLoadEndCB.is_none() )
 		mLoadEndCB();
+}
+
+void CEFWrapper::OnLoadStart( 
+		CefRefPtr< CefBrowser > browser,
+		CefRefPtr< CefFrame > frame,
+		TransitionType transition_type )
+{
+	if( !m_ScrollbarsEnabled )
+		HideScrollbars( frame );
 }
 
 #endif

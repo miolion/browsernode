@@ -27,6 +27,7 @@ CEFNode::CEFNode(const ArgList& Args)
 	CEFWrapper::Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
 
 	setScrollbarsEnabled( m_InitScrollbarsEnabled );
+	setVolume( m_InitVolume );
 
 	SetMouseInput( m_MouseInput );
 }
@@ -132,7 +133,7 @@ void CEFNode::renderFX(GLContext* context)
 
 bool CEFNode::handleEvent(EventPtr ev)
 {
-	ProcessEvent( ev );
+	ProcessEvent( ev, this );
 	return RasterNode::handleEvent( ev );
 }
 
@@ -169,7 +170,7 @@ void CEFNode::setMouseInput(bool mouse)
 
 void CEFNode::sendKeyEvent( KeyEventPtr keyevent )
 {
-	ProcessEvent( keyevent );
+	ProcessEvent( keyevent, this );
 }
 
 void CEFNode::registerType()
@@ -181,7 +182,9 @@ void CEFNode::registerType()
 		.addArg(Arg<bool>("mouseInput", false, false,
 				offsetof(CEFNode, m_MouseInput)))
 		.addArg(Arg<bool>("scrollbars", true, false,
-				offsetof(CEFNode, m_InitScrollbarsEnabled)));
+				offsetof(CEFNode, m_InitScrollbarsEnabled)))
+		.addArg(Arg<double>("volume", 1.0, false,
+				offsetof(CEFNode, m_InitVolume)));
 
     const char* allowedParentNodeNames[] = {"avg", "div", 0};
     avg::TypeRegistry::get()->registerType(def, allowedParentNodeNames);
@@ -213,6 +216,8 @@ BOOST_PYTHON_MODULE(CEFplugin)
 			&CEFNode::GetRendererCrashCB, &CEFNode::SetRendererCrashCB )
 		.add_property( "scrollbars",
 			&CEFNode::getScrollbarsEnabled, &CEFNode::setScrollbarsEnabled )
+		.add_property( "volume",
+			&CEFNode::getVolume, &CEFNode::setVolume )
 
 		// Functions
 		.def( "sendKeyEvent", &CEFNode::sendKeyEvent )

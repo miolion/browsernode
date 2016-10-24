@@ -6,7 +6,7 @@
 
   <title>TestPage</title>
   <style>
-      #main
+      body
       {
           background-color: rgba( 255, 255, 255, 0.8);
       }
@@ -14,15 +14,16 @@
 </head>
 
 <body>
-  <div id="main">
     <p>This is a transparent page. If you click the button below, the python
     callback will be called. Which will execute some JS in other CEFnode. </p>
     URL:<input id="site" type="text" />
-    <button onclick="avg.send( 'loadurl', document.getElementById('site').value)">
+    <button onclick="avg.send( 'loadurl', document.getElementById('site').value);">
     GO</button>
     <button onclick="avg.send( 'setscroll', 'enable' )">EnableScrollbars</button>
     <button onclick="avg.send( 'setscroll', 'disable' )">DisableScrollbars</button>
     <button onclick="avg.send( 'refresh', '')">Refresh</button>
-  </div>
+    Volume:<input id="vol" type="range" min="0.0" max="1.0" step="0.01" />
+    <button onclick="avg.send( 'setvolume', document.getElementById('vol').value);">
+    SetVolume</button>
 </body>
 </html>

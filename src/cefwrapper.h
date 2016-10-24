@@ -76,6 +76,7 @@ public:
 #include <player/MouseEvent.h>
 #include <player/MouseWheelEvent.h>
 #include <player/KeyEvent.h>
+#include <player/Node.h>
 
 #include <graphics/GLContextManager.h>
 #include <graphics/OGLHelper.h>
@@ -139,6 +140,13 @@ private:
 
 	bool m_ScrollbarsEnabled;
 
+	double m_Volume;
+
+	void HideScrollbars( CefRefPtr< CefFrame > Frame );
+	void ShowScrollbars( CefRefPtr< CefFrame > Frame );
+
+	void SetVolumeInternal( CefRefPtr< CefFrame > Frame, double volume );
+
 public:
 	/*! \brief Should be called before application exit. */
 	static void Cleanup();
@@ -154,7 +162,7 @@ public:
 	void ScheduleTexUpload( avg::MCTexturePtr texture );
 	void Resize( glm::uvec2 size );
 
-	void ProcessEvent( avg::EventPtr ev );
+	void ProcessEvent( avg::EventPtr ev, avg::Node* cefnode );
 
 
 	/*! \brief Used to receive data from avg.send in JS.
@@ -191,7 +199,8 @@ public:
 	void setScrollbarsEnabled(bool scroll);
 	bool getScrollbarsEnabled() const;
 
-
+	void setVolume( double volume );
+	double getVolume() const;
 
 	///*************************************************
 	/// CefClient inherited functions
@@ -236,7 +245,13 @@ public:
 		CefRefPtr< CefBrowser > browser,
 		bool isLoading,
 		bool canGoBack,
-		bool canGoForward );
+		bool canGoForward ) OVERRIDE;
+
+	// Used to inject JS into page before loading.
+	void OnLoadStart( 
+		CefRefPtr< CefBrowser > browser,
+		CefRefPtr< CefFrame > frame,
+		TransitionType transition_type) OVERRIDE;
 
 	///*************************************************
 
