@@ -34,8 +34,7 @@ CEFNode::CEFNode(const ArgList& Args)
 
 CEFNode::~CEFNode()
 {
-	ObjectCounter::get()->decRef(&typeid(*this));
-	Player::get()->unregisterPreRenderListener(this);
+	Release();
 }
 
 void CEFNode::connectDisplay()
@@ -52,6 +51,12 @@ void CEFNode::connect(CanvasPtr canvas)
 void CEFNode::disconnect(bool kill)
 {
 	RasterNode::disconnect(kill);
+
+	if( kill )
+	{
+		ObjectCounter::get()->decRef(&typeid(*this));
+		Player::get()->unregisterPreRenderListener(this);
+	}
 }
 
 void CEFNode::createSurface()
