@@ -148,8 +148,6 @@ private:
 	void SetVolumeInternal( CefRefPtr< CefFrame > Frame, double volume );
 
 public:
-	/*! \brief Should be called before application exit. */
-	static void Cleanup();
 
 	void Init( glm::uvec2 res, bool transparent );
 
@@ -196,11 +194,11 @@ public:
 
 	
 	/*! \brief Sets scrollbar visibility. Applies after reload. */
-	void setScrollbarsEnabled(bool scroll);
-	bool getScrollbarsEnabled() const;
+	void SetScrollbarsEnabled(bool scroll);
+	bool GetScrollbarsEnabled() const;
 
-	void setVolume( double volume );
-	double getVolume() const;
+	void SetVolume( double volume );
+	double GetVolume() const;
 
 	///*************************************************
 	/// CefClient inherited functions

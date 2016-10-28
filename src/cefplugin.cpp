@@ -22,19 +22,19 @@ CEFNode::CEFNode(const ArgList& Args)
 	RasterNode::setArgs( Args );
 	Args.setMembers( this );
 
-	Player::get()->registerPreRenderListener( this );
 
-	CEFWrapper::Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
+	mWrapper = new CEFWrapper();
+	mWrapper->Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
 
 	setScrollbarsEnabled( m_InitScrollbarsEnabled );
 	setVolume( m_InitVolume );
 
-	SetMouseInput( m_MouseInput );
+	setMouseInput( m_MouseInput );
 }
 
 CEFNode::~CEFNode()
 {
-	Release();
+	ObjectCounter::get()->decRef(&typeid(*this));
 }
 
 void CEFNode::connectDisplay()
@@ -45,18 +45,14 @@ void CEFNode::connectDisplay()
 
 void CEFNode::connect(CanvasPtr canvas)
 {
+	Player::get()->registerPreRenderListener( this );
 	RasterNode::connect(canvas);
 }
 
 void CEFNode::disconnect(bool kill)
 {
+	Player::get()->unregisterPreRenderListener( this );
 	RasterNode::disconnect(kill);
-
-	if( kill )
-	{
-		ObjectCounter::get()->decRef(&typeid(*this));
-		Player::get()->unregisterPreRenderListener(this);
-	}
 }
 
 void CEFNode::createSurface()
@@ -72,7 +68,7 @@ void CEFNode::createSurface()
 	m_LastSize = getSize();
 
 	// Resize GLRenderHandler bitmap.
-	Resize(glm::uvec2(getWidth(), getHeight()));
+	mWrapper->Resize(glm::uvec2(getWidth(), getHeight()));
 
 	IntPoint size(getWidth(), getHeight());
 
@@ -102,7 +98,7 @@ void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
         m_SurfaceCreated = true;
         m_LastSize = getSize();
 
-        Resize( glm::uvec2(getWidth(), getHeight()));
+        mWrapper->Resize( glm::uvec2(getWidth(), getHeight()));
 
 		IntPoint size(getWidth(), getHeight());
         PixelFormat pf = B8G8R8A8;
@@ -114,7 +110,7 @@ void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
 
     if (isVisible())
 	{
-		ScheduleTexUpload(m_pTexture);
+		mWrapper->ScheduleTexUpload(m_pTexture);
 		scheduleFXRender();
     }
 
@@ -134,7 +130,7 @@ static ProfilingZoneID updatepzid("CEFnode::update");
 void CEFNode::onPreRender()
 {
 	ScopeTimer Timer(updatepzid);
-	Update();
+	mWrapper->Update();
 }
 
 void CEFNode::renderFX(GLContext* context)
@@ -144,14 +140,18 @@ void CEFNode::renderFX(GLContext* context)
 
 bool CEFNode::handleEvent(EventPtr ev)
 {
-	ProcessEvent( ev, this );
+	mWrapper->ProcessEvent( ev, this );
 	return RasterNode::handleEvent( ev );
 }
 
 ///*****************************************************************************
 /// CEFNodeAPI
 
-char CEFNodeName[] = "CEFnode";
+
+void CEFNode::cleanup()
+{
+	CefShutdown();
+}
 
 bool CEFNode::getTransparent() const
 {
@@ -172,17 +172,87 @@ bool CEFNode::getMouseInput() const
 {
 	return m_MouseInput;
 }
-
 void CEFNode::setMouseInput(bool mouse)
 {
-	SetMouseInput( mouse );
+	mWrapper->SetMouseInput( mouse );
 	m_MouseInput = mouse;
+}
+
+boost::python::object CEFNode::getLoadEndCB() const
+{
+	return mWrapper->GetLoadEndCB();
+}
+void CEFNode::setLoadEndCB( boost::python::object cb )
+{
+	mWrapper->SetLoadEndCB( cb );
+}
+
+boost::python::object CEFNode::getPluginCrashCB() const
+{
+	return mWrapper->GetPluginCrashCB();
+}
+void CEFNode::setPluginCrashCB( boost::python::object cb )
+{
+	mWrapper->SetPluginCrashCB( cb );
+}
+
+boost::python::object CEFNode::getRendererCrashCB() const
+{
+	return mWrapper->GetRendererCrashCB();
+}
+void CEFNode::setRendererCrashCB( boost::python::object cb )
+{
+	mWrapper->SetRendererCrashCB( cb );
+}
+
+bool CEFNode::getScrollbarsEnabled() const
+{
+	return mWrapper->GetScrollbarsEnabled();
+}
+void CEFNode::setScrollbarsEnabled( bool enabled )
+{
+	mWrapper->SetScrollbarsEnabled( enabled );
+}
+
+double CEFNode::getVolume() const
+{
+	return mWrapper->GetVolume();
+}
+void CEFNode::setVolume( double vol )
+{
+	mWrapper->SetVolume( vol );
 }
 
 void CEFNode::sendKeyEvent( KeyEventPtr keyevent )
 {
-	ProcessEvent( keyevent, this );
+	mWrapper->ProcessEvent( keyevent, this );
 }
+
+void CEFNode::loadURL( std::string url )
+{
+	mWrapper->LoadURL( url );
+}
+
+void CEFNode::refresh()
+{
+	mWrapper->Refresh();
+}
+
+void CEFNode::executeJS( std::string code )
+{
+	mWrapper->ExecuteJS( code );
+}
+
+void CEFNode::addJSCallback( std::string cmd, boost::python::object cb )
+{
+	mWrapper->AddJSCallback( cmd, cb );
+}
+void CEFNode::removeJSCallback( std::string cmd )
+{
+	mWrapper->RemoveJSCallback( cmd );
+}
+
+char CEFNodeName[] = "CEFnode";
 
 void CEFNode::registerType()
 {
@@ -209,7 +279,7 @@ BOOST_PYTHON_MODULE(CEFplugin)
 {
     class_<CEFNode, bases<RasterNode>, boost::noncopyable>("CEFnode", no_init)
         .def( "__init__", raw_constructor(createNode<CEFNodeName>) )
-		.def( "cleanup", &CEFNode::Cleanup ).staticmethod( "cleanup" )
+		.def( "cleanup", &CEFNode::cleanup ).staticmethod( "cleanup" )
 
 		// Read only
 		.add_property( "transparent", &CEFNode::getTransparent )
@@ -220,11 +290,11 @@ BOOST_PYTHON_MODULE(CEFplugin)
 		.add_property( "mouseInput",
 			&CEFNode::getMouseInput, &CEFNode::setMouseInput )
 		.add_property( "onLoadEnd",
-			&CEFNode::GetLoadEndCB, &CEFNode::SetLoadEndCB )
+			&CEFNode::getLoadEndCB, &CEFNode::setLoadEndCB )
 		.add_property( "onPluginCrash",
-			&CEFNode::GetPluginCrashCB, &CEFNode::SetPluginCrashCB )
+			&CEFNode::getPluginCrashCB, &CEFNode::setPluginCrashCB )
 		.add_property( "onRendererCrash",
-			&CEFNode::GetRendererCrashCB, &CEFNode::SetRendererCrashCB )
+			&CEFNode::getRendererCrashCB, &CEFNode::setRendererCrashCB )
 		.add_property( "scrollbars",
 			&CEFNode::getScrollbarsEnabled, &CEFNode::setScrollbarsEnabled )
 		.add_property( "volume",
@@ -232,11 +302,11 @@ BOOST_PYTHON_MODULE(CEFplugin)
 
 		// Functions
 		.def( "sendKeyEvent", &CEFNode::sendKeyEvent )
-		.def( "loadURL", &CEFNode::LoadURL )
-		.def( "refresh", &CEFNode::Refresh )
-		.def( "executeJS", &CEFNode::ExecuteJS )
-		.def( "addJSCallback", &CEFNode::AddJSCallback )
-		.def( "removeJSCallback", &CEFNode::RemoveJSCallback );
+		.def( "loadURL", &CEFNode::loadURL )
+		.def( "refresh", &CEFNode::refresh )
+		.def( "executeJS", &CEFNode::executeJS )
+		.def( "addJSCallback", &CEFNode::addJSCallback )
+		.def( "removeJSCallback", &CEFNode::removeJSCallback );
 }
 
 AVG_PLUGIN_API PyObject* registerPlugin()

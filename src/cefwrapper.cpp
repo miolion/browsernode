@@ -416,11 +416,6 @@ void CEFWrapper::ProcessEvent( EventPtr ev, Node* cefnode )
 	}
 }
 
-void CEFWrapper::Cleanup()
-{
-	CefShutdown();
-}
-
 void CEFWrapper::AddJSCallback( std::string cmd, boost::python::object func )
 {
 	mJSCBs[cmd] = func;
@@ -447,7 +442,7 @@ void CEFWrapper::ExecuteJS( std::string command )
 	frame->ExecuteJavaScript( command, frame->GetURL(), 0 );
 }
 
-bool CEFWrapper::getScrollbarsEnabled() const
+bool CEFWrapper::GetScrollbarsEnabled() const
 {
 	return m_ScrollbarsEnabled;
 }
@@ -466,7 +461,7 @@ void CEFWrapper::ShowScrollbars( CefRefPtr<CefFrame> frame )
 	m_ScrollbarsEnabled = true;
 }
 
-void CEFWrapper::setScrollbarsEnabled( bool scroll )
+void CEFWrapper::SetScrollbarsEnabled( bool scroll )
 {
 	if( scroll )
 		ShowScrollbars( mBrowser->GetMainFrame() );
@@ -495,12 +490,12 @@ void CEFWrapper::SetVolumeInternal( CefRefPtr<CefFrame> frame, double volume )
 	m_Volume = volume;
 }
 
-void CEFWrapper::setVolume( double volume )
+void CEFWrapper::SetVolume( double volume )
 {
 	SetVolumeInternal( mBrowser->GetMainFrame(), volume );
 }
 
-double CEFWrapper::getVolume() const
+double CEFWrapper::GetVolume() const
 {
 	return m_Volume;
 }

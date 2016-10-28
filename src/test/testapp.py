@@ -39,21 +39,17 @@ class MyMainDiv(app.MainDiv):
         self.local.onPluginCrash = self.onPluginCrash;
         self.local.onRendererCrash = self.onRendererCrash;
 
-        self.remote.onPluginCrash = self.onPluginCrash;
-        self.remote.onRendererCrash = self.onRendererCrash;
-
         self.local.onLoadEnd = self.onLoadEnd;
 
         url = "file:///"
         url += os.getcwd()
         url += "/testpage.html"
         self.local.loadURL( url )
-        self.remote.loadURL( "youtube.com" )
 
-        self.remote.mouseInput = True
         self.local.mouseInput = True
         player.subscribe(player.KEY_DOWN, self.onKey)
         player.subscribe(player.KEY_UP, self.onKey)
+        
         pass
 
     def onKey(self, keyevent):
@@ -69,7 +65,13 @@ class MyMainDiv(app.MainDiv):
         pass
 
     def onLoadURL( self, data ):
+        #Recreate node only to test destruction of object.
+        self.removeChild( self.remote )
+        self.remote = libavg_cefplugin.CEFnode(pos=(0,100), size=(self.size.x,self.size.y-100), id="remote", parent=self)
         self.remote.loadURL( data )
+        self.remote.onPluginCrash = self.onPluginCrash;
+        self.remote.onRendererCrash = self.onRendererCrash;
+        self.remote.mouseInput = True
 
     def onRefresh(self, data):
         self.remote.refresh()

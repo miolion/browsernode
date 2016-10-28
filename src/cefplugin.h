@@ -41,11 +41,15 @@ namespace avg
 {
 
 /*! \brief Represents a CEF browser instance. */
-class CEFNode : public RasterNode, public IPreRenderListener, public CEFWrapper
+class CEFNode : public RasterNode, public IPreRenderListener
 {
 public:
     static void registerType();
 	void preprerender();
+
+	// CefWrapper must be in a CefRefPtr for proper cleanup.
+	// Because of this we can't inherit it.
+	CefRefPtr< CEFWrapper > mWrapper;
 
     CEFNode(const ArgList& Args);
 	~CEFNode();
@@ -67,18 +71,38 @@ public:
 	void onPreRender();
 
     // Python API
+
+	// Should be called before application exit.
+	static void cleanup();
+
     bool getTransparent() const;
-
-    void setKeyboardInput(bool keyb);
-    bool getKeyboardInput() const;
-
-    void setMouseInput(bool mouse);
-    bool getMouseInput() const;
-
-    void sendKeyEvent( KeyEventPtr keyevent );
-
 	bool getAudioMuted() const;
 	int getDebuggerPort() const;
+
+	void setMouseInput(bool mouse);
+    bool getMouseInput() const;
+
+	boost::python::object getLoadEndCB() const;
+	void setLoadEndCB( boost::python::object );
+	boost::python::object getPluginCrashCB() const;
+	void setPluginCrashCB( boost::python::object );
+	boost::python::object getRendererCrashCB() const;
+	void setRendererCrashCB( boost::python::object );
+
+	bool getScrollbarsEnabled() const;
+	void setScrollbarsEnabled( bool );
+
+	double getVolume() const;
+	void setVolume( double vol );
+
+    void sendKeyEvent( KeyEventPtr keyevent );
+	void loadURL( std::string url );
+	void refresh();
+	void executeJS( std::string code );
+	void addJSCallback( std::string cmd, boost::python::object cb );
+	void removeJSCallback( std::string cmd );
+
+
 
 	// Read from config, but available read-only in python.
 	static bool g_AudioMuted;
