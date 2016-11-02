@@ -18,8 +18,6 @@ CEFNode::CEFNode(const ArgList& Args)
 	m_Transparent( false ), m_MouseInput( false ), m_InitScrollbarsEnabled( true )
 {
 	ObjectCounter::get()->incRef(&typeid(*this));
-
-	RasterNode::setArgs( Args );
 	Args.setMembers( this );
 
 	mWrapper = new CEFWrapper();
@@ -32,8 +30,8 @@ CEFNode::~CEFNode()
 
 void CEFNode::connectDisplay()
 {
-	RasterNode::connectDisplay();
 	createSurface();
+	RasterNode::connectDisplay();
 }
 
 void CEFNode::connect(CanvasPtr canvas)
@@ -52,8 +50,8 @@ void CEFNode::connect(CanvasPtr canvas)
 void CEFNode::disconnect(bool kill)
 {
 	Player::get()->unregisterPreRenderListener( this );
-	RasterNode::disconnect(kill);
 	mWrapper->Close();
+	RasterNode::disconnect(kill);
 }
 
 void CEFNode::createSurface()
@@ -68,7 +66,6 @@ void CEFNode::createSurface()
 	m_SurfaceCreated= true;
 	m_LastSize = getSize();
 
-	// Resize GLRenderHandler bitmap.
 	mWrapper->Resize(glm::uvec2(getWidth(), getHeight()));
 
 	IntPoint size(getWidth(), getHeight());
@@ -76,8 +73,6 @@ void CEFNode::createSurface()
 	PixelFormat pf = B8G8R8A8;
 	m_pTexture = GLContextManager::get()->createTexture(size, pf, false);
 	getSurface()->create(pf, m_pTexture);
-
-	newSurface();
 }
 
 static ProfilingZoneID prerenderpzid("CEFnode::prerender");

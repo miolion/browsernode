@@ -163,7 +163,6 @@ void CEFWrapper::Resize( glm::uvec2 size )
 	{
 		std::cerr << "Warning: Tried resize texture to 0" << std::endl;
 	}
-	//std::cout << "Resize";
 	mSize = size;
 
 	// Only way to resize bitmap is to recreate it.
@@ -189,7 +188,6 @@ void CEFWrapper::OnPaint( CefRefPtr<CefBrowser> browser,
                             int width,
                             int height )
 {
-	//Sstd::cout << "OnPaint" << std::endl;
 	if( width != mRenderBitmap->getSize().x ||
 		height != mRenderBitmap->getSize().y )
 	{
