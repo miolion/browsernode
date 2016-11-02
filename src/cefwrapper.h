@@ -11,6 +11,7 @@
 
 
 #include <include/cef_render_handler.h>
+#include <include/cef_life_span_handler.h>
 #include <include/cef_client.h>
 #include <include/cef_app.h>
 
@@ -87,39 +88,9 @@ namespace avg
 
 /*! \brief Used as interface to CEF HTML-based GUI.
  * It is basically a browser instance. */
-class CEFWrapper : public CefClient, CefLoadHandler, CefRequestHandler
+class CEFWrapper : public CefClient, CefLoadHandler, CefRequestHandler,
+	CefLifeSpanHandler, CefRenderHandler
 {
-public:
-
-	/*! \brief Used to update and render the texture provided by CEF. */
-	class AVGRenderHandler : public CefRenderHandler
-	{
-	private:
-		glm::uvec2 mSize;
-		avg::BitmapPtr mRenderBitmap;
-
-	public:
-		AVGRenderHandler( glm::uvec2 size );
-
-		/// CefRenderHandler inherited functions:
-		/*! \brief Used to acquire window size. */
-		bool GetViewRect( CefRefPtr<CefBrowser> browser, CefRect &rect );
-
-		/*! \brief Called to update texture. */
-		void OnPaint( CefRefPtr<CefBrowser> browser,
-			PaintElementType type,
-			const RectList &dirtyRects,
-			const void* buffer,
-			int width,
-			int height );
-
-		/// ------------------------------------
-		void Resize( glm::uvec2 size );
-
-		void ScheduleTexUpload( avg::MCTexturePtr texture );
-
-		IMPLEMENT_REFCOUNTING( AVGRenderHandler );
-	};
 
 private:
 
@@ -130,11 +101,16 @@ private:
 	boost::python::object mPluginCrashCB;
 	boost::python::object mRendererCrashCB;
 
-	void Init();
 
-	CefRefPtr<CefBrowser> mBrowser;
+	void Deinit();
 
-	CefRefPtr<AVGRenderHandler> mRenderHandler;
+
+	glm::uvec2 mSize;
+	avg::BitmapPtr mRenderBitmap;
+
+	// May refer back to us, which causes a cyclic dependence.
+	// We break it by using a pointer to a refptr. Ugly but works.
+	CefRefPtr<CefBrowser>* mBrowser;
 
 	bool m_MouseInput;
 
@@ -149,7 +125,12 @@ private:
 
 public:
 
+	CEFWrapper();
+	virtual ~CEFWrapper(){ }
+
 	void Init( glm::uvec2 res, bool transparent );
+	void Close();
+
 
 	void SetMouseInput(bool mouse){ m_MouseInput = mouse; }
 
@@ -205,10 +186,15 @@ public:
 
 	CefRefPtr< CefRenderHandler > GetRenderHandler() OVERRIDE
 	{
-		return mRenderHandler.get();
+		return this;
 	}
 
 	CefRefPtr< CefLoadHandler > GetLoadHandler() OVERRIDE
+	{
+		return this;
+	}
+
+	CefRefPtr< CefLifeSpanHandler > GetLifeSpanHandler() OVERRIDE
 	{
 		return this;
 	}
@@ -221,23 +207,42 @@ public:
 	bool OnProcessMessageReceived(
 		CefRefPtr< CefBrowser > browser,
 		CefProcessId source_process,
-		CefRefPtr< CefProcessMessage > message );
+		CefRefPtr< CefProcessMessage > message ) OVERRIDE;
+	///*************************************************
+
+	///*************************************************
+	/// CefRenderHandler inherited functions:
+	/*! \brief Used to acquire window size. */
+	bool GetViewRect( CefRefPtr<CefBrowser> browser, CefRect &rect ) OVERRIDE;
+
+	/*! \brief Called to update texture. */
+	void OnPaint( CefRefPtr<CefBrowser> browser,
+		PaintElementType type,
+		const RectList &dirtyRects,
+		const void* buffer,
+		int width,
+		int height ) OVERRIDE;
+	///*************************************************
+
+	///*************************************************
+	/// CefLifeSpanHandler inherited functions
+	// Used to know when to free browser instance
+	void OnBeforeClose( CefRefPtr< CefBrowser > browser ) OVERRIDE;
 	///*************************************************
 
 	///*************************************************
 	/// CefRequestHandler inherited functions
 	void OnPluginCrashed(
 		CefRefPtr< CefBrowser > browser,
-		 const CefString& plugin_path );
+		 const CefString& plugin_path ) OVERRIDE;
 
 	void OnRenderProcessTerminated(
 		CefRefPtr< CefBrowser > browser,
-		CefRequestHandler::TerminationStatus status );
+		CefRequestHandler::TerminationStatus status ) OVERRIDE;
 	///*************************************************
 
 	///*************************************************
 	/// CefLoadHandler inherited functions
-
 	// isLoading parameter can be used to determine when stopped loading.
 	void OnLoadingStateChange(
 		CefRefPtr< CefBrowser > browser,

@@ -105,17 +105,65 @@ bool CEFApp::Execute(
 
 #ifndef CEF_APP_ONLY
 
-CEFWrapper::AVGRenderHandler::AVGRenderHandler( glm::uvec2 size )
+CEFWrapper::CEFWrapper()
 {
-	Resize( size );
+	
 }
 
-void CEFWrapper::AVGRenderHandler::Resize( glm::uvec2 size )
+void CEFWrapper::Init( glm::uvec2 res, bool transparent )
+{
+	mBrowser = new CefRefPtr< CefBrowser >;
+
+	CefWindowInfo windowinfo;
+	windowinfo.SetAsWindowless( 0, transparent );
+
+	CefBrowserSettings browsersettings;
+	browsersettings.windowless_frame_rate = 60;
+
+	*mBrowser = CefBrowserHost::CreateBrowserSync(
+		windowinfo, this, "",
+		browsersettings, nullptr );
+
+	Resize( res );
+}
+
+void CEFWrapper::Deinit( )
+{
+	delete mBrowser;
+}
+
+void CEFWrapper::Close()
+{
+	(*mBrowser)->GetHost()->CloseBrowser( false ); 
+}
+
+void CEFWrapper::LoadURL( std::string url )
+{
+	(*mBrowser)->GetMainFrame()->LoadURL(url);
+}
+
+void CEFWrapper::Refresh()
+{
+	(*mBrowser)->Reload();
+}
+
+void CEFWrapper::Update()
+{
+	CefDoMessageLoopWork();
+}
+
+void CEFWrapper::ScheduleTexUpload( avg::MCTexturePtr texture )
+{
+	avg::GLContextManager::get()->scheduleTexUpload(texture, mRenderBitmap);
+}
+
+void CEFWrapper::Resize( glm::uvec2 size )
 {
 	if( size.x == 0 || size.y == 0 )
 	{
 		std::cerr << "Warning: Tried resize texture to 0" << std::endl;
 	}
+	//std::cout << "Resize";
 	mSize = size;
 
 	// Only way to resize bitmap is to recreate it.
@@ -123,22 +171,25 @@ void CEFWrapper::AVGRenderHandler::Resize( glm::uvec2 size )
 	mRenderBitmap = avg::BitmapPtr(
 		new avg::Bitmap( glm::vec2((float)size.x, (float)size.y),
 			avg::B8G8R8A8 ) );
+
+	(*mBrowser)->GetHost()->WasResized();
 }
 
-bool CEFWrapper::AVGRenderHandler::GetViewRect(
+bool CEFWrapper::GetViewRect(
 	CefRefPtr<CefBrowser> browser, CefRect &rect )
 {
 	rect = CefRect( 0, 0, mSize.x, mSize.y );
 	return true;
 }
 
-void CEFWrapper::AVGRenderHandler::OnPaint( CefRefPtr<CefBrowser> browser,
+void CEFWrapper::OnPaint( CefRefPtr<CefBrowser> browser,
                             PaintElementType type,
                             const RectList &dirtyRects,
                             const void* buffer,
                             int width,
                             int height )
 {
+	//Sstd::cout << "OnPaint" << std::endl;
 	if( width != mRenderBitmap->getSize().x ||
 		height != mRenderBitmap->getSize().y )
 	{
@@ -149,68 +200,12 @@ void CEFWrapper::AVGRenderHandler::OnPaint( CefRefPtr<CefBrowser> browser,
 	mRenderBitmap->setPixels(static_cast< const unsigned char* >(buffer));
 }
 
-void CEFWrapper::AVGRenderHandler::ScheduleTexUpload( avg::MCTexturePtr texture )
-{
-	avg::GLContextManager::get()->scheduleTexUpload(texture, mRenderBitmap);
-}
-
-void CEFWrapper::Init( glm::uvec2 res, bool transparent )
-{
-	CefWindowInfo windowinfo;
-	windowinfo.SetAsWindowless( 0, transparent );
-
-	CefBrowserSettings browsersettings;
-	browsersettings.windowless_frame_rate = 60;
-
-	mRenderHandler = new AVGRenderHandler( res );
-
-	mBrowser = CefBrowserHost::CreateBrowserSync(
-		windowinfo, this, "",
-		browsersettings, nullptr );
-}
-
-void CEFWrapper::LoadURL( std::string url )
-{
-	mBrowser->GetMainFrame()->LoadURL(url);
-}
-
-void CEFWrapper::Refresh()
-{
-	mBrowser->Reload();
-}
-
-void CEFWrapper::Update()
-{
-	CefDoMessageLoopWork();
-}
-
-void CEFWrapper::ScheduleTexUpload( avg::MCTexturePtr texture )
-{
-	mRenderHandler->ScheduleTexUpload( texture );
-}
-
-void CEFWrapper::Resize( glm::uvec2 size )
-{
-	mRenderHandler->Resize( size );
-	mBrowser->GetHost()->WasResized();
-}
 
 void CEFWrapper::ProcessEvent( EventPtr ev, Node* cefnode )
 {
 	MouseEventPtr mouse = boost::dynamic_pointer_cast<MouseEvent>(ev);
 	MouseWheelEventPtr wheel = boost::dynamic_pointer_cast<MouseWheelEvent>(ev);
 	KeyEventPtr key = boost::dynamic_pointer_cast<KeyEvent>(ev);
-
-	switch( ev->getType() )
-	{
-		case Event::CURSOR_OVER:
-			mBrowser->GetHost()->SendFocusEvent(true);
-			break;
-		case Event::CURSOR_OUT:
-			mBrowser->GetHost()->SendFocusEvent(false);
-			break;
-
-	}
 
 	if( m_MouseInput && mouse )
 	{
@@ -240,12 +235,12 @@ void CEFWrapper::ProcessEvent( EventPtr ev, Node* cefnode )
 		int type = mouse->getType();
 		if( type == Event::CURSOR_MOTION )
 		{
-			mBrowser->GetHost()->SendMouseMoveEvent( cefevent, false );
+			(*mBrowser)->GetHost()->SendMouseMoveEvent( cefevent, false );
 		}
 		else if( type == Event::CURSOR_UP || type == Event::CURSOR_DOWN )
 		{
 			bool mouseUp = type == Event::CURSOR_UP;
-			mBrowser->GetHost()->
+			(*mBrowser)->GetHost()->
 				SendMouseClickEvent( cefevent, btntype, mouseUp, 1 );
 		}
 	} // if mouseevent
@@ -258,7 +253,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev, Node* cefnode )
 		cefevent.y = (int)pos.y;
 
 		glm::vec2 motion = wheel->getMotion() * 40.0f;
-		mBrowser->GetHost()->SendMouseWheelEvent(cefevent, (int)motion.x, (int)motion.y);
+		(*mBrowser)->GetHost()->SendMouseWheelEvent(cefevent, (int)motion.x, (int)motion.y);
 	} // if wheelevent
 
 	if( key )
@@ -412,7 +407,7 @@ void CEFWrapper::ProcessEvent( EventPtr ev, Node* cefnode )
 #endif
 		}
 
-		mBrowser->GetHost()->SendKeyEvent( evt );
+		(*mBrowser)->GetHost()->SendKeyEvent( evt );
 	}
 }
 
@@ -438,7 +433,7 @@ void CEFWrapper::RemoveJSCallback( std::string cmd )
 
 void CEFWrapper::ExecuteJS( std::string command )
 {
-	CefRefPtr<CefFrame> frame = mBrowser->GetMainFrame();
+	CefRefPtr<CefFrame> frame = (*mBrowser)->GetMainFrame();
 	frame->ExecuteJavaScript( command, frame->GetURL(), 0 );
 }
 
@@ -464,9 +459,9 @@ void CEFWrapper::ShowScrollbars( CefRefPtr<CefFrame> frame )
 void CEFWrapper::SetScrollbarsEnabled( bool scroll )
 {
 	if( scroll )
-		ShowScrollbars( mBrowser->GetMainFrame() );
+		ShowScrollbars( (*mBrowser)->GetMainFrame() );
 	else
-		HideScrollbars( mBrowser->GetMainFrame() );
+		HideScrollbars( (*mBrowser)->GetMainFrame() );
 }
 
 void CEFWrapper::SetVolumeInternal( CefRefPtr<CefFrame> frame, double volume )
@@ -492,7 +487,7 @@ void CEFWrapper::SetVolumeInternal( CefRefPtr<CefFrame> frame, double volume )
 
 void CEFWrapper::SetVolume( double volume )
 {
-	SetVolumeInternal( mBrowser->GetMainFrame(), volume );
+	SetVolumeInternal( (*mBrowser)->GetMainFrame(), volume );
 }
 
 double CEFWrapper::GetVolume() const
@@ -574,6 +569,12 @@ void CEFWrapper::OnLoadStart(
 {
 	if( !m_ScrollbarsEnabled )
 		HideScrollbars( frame );
+}
+
+void CEFWrapper::OnBeforeClose( CefRefPtr< CefBrowser > browser )
+{
+	if( (*mBrowser)->IsSame( browser ) )
+		Deinit();
 }
 
 #endif

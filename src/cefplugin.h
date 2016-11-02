@@ -52,7 +52,7 @@ public:
 	CefRefPtr< CEFWrapper > mWrapper;
 
     CEFNode(const ArgList& Args);
-	~CEFNode();
+	virtual ~CEFNode();
 
 	void connectDisplay(); // RasterNode : AreaNode : Node
 	void connect(CanvasPtr canvas); // RasterNode : AreaNode : Node

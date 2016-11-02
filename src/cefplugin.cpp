@@ -22,14 +22,7 @@ CEFNode::CEFNode(const ArgList& Args)
 	RasterNode::setArgs( Args );
 	Args.setMembers( this );
 
-
 	mWrapper = new CEFWrapper();
-	mWrapper->Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
-
-	setScrollbarsEnabled( m_InitScrollbarsEnabled );
-	setVolume( m_InitVolume );
-
-	setMouseInput( m_MouseInput );
 }
 
 CEFNode::~CEFNode()
@@ -45,6 +38,13 @@ void CEFNode::connectDisplay()
 
 void CEFNode::connect(CanvasPtr canvas)
 {
+	mWrapper->Init( glm::uvec2(getWidth(), getHeight()), m_Transparent );
+
+	setScrollbarsEnabled( m_InitScrollbarsEnabled );
+	setVolume( m_InitVolume );
+
+	setMouseInput( m_MouseInput );
+
 	Player::get()->registerPreRenderListener( this );
 	RasterNode::connect(canvas);
 }
@@ -53,6 +53,7 @@ void CEFNode::disconnect(bool kill)
 {
 	Player::get()->unregisterPreRenderListener( this );
 	RasterNode::disconnect(kill);
+	mWrapper->Close();
 }
 
 void CEFNode::createSurface()
