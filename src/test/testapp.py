@@ -35,6 +35,7 @@ class MyMainDiv(app.MainDiv):
         self.local.addJSCallback( "refresh", self.onRefresh )
         self.local.addJSCallback( "loadurl", self.onLoadURL )
         self.local.addJSCallback( "setvolume", self.onSetVolume )
+        self.local.addJSCallback( "testloop", self.onTestLoop )
 
         self.local.onPluginCrash = self.onPluginCrash;
         self.local.onRendererCrash = self.onRendererCrash;
@@ -49,7 +50,7 @@ class MyMainDiv(app.MainDiv):
         self.local.mouseInput = True
         player.subscribe(player.KEY_DOWN, self.onKey)
         player.subscribe(player.KEY_UP, self.onKey)
-        
+
         pass
 
     def onKey(self, keyevent):
@@ -66,12 +67,26 @@ class MyMainDiv(app.MainDiv):
 
     def onLoadURL( self, data ):
         #Recreate node only to test destruction of object.
+        self.loadURL( data )
+        self.stopLoop = True
+
+    def loadURL( self, data ):
         self.removeChild( self.remote )
         self.remote = libavg_cefplugin.CEFnode(pos=(0,100), size=(self.size.x,self.size.y-100), id="remote", parent=self)
         self.remote.loadURL( data )
         self.remote.onPluginCrash = self.onPluginCrash;
         self.remote.onRendererCrash = self.onRendererCrash;
         self.remote.mouseInput = True
+
+    def onTestLoop( self, url ):
+        self.url = url
+        self.stopLoop = False
+        self.onLoop()
+
+    def onLoop( self ):
+        self.loadURL( self.url )
+        if not self.stopLoop:
+            player.setTimeout( 1000, self.onLoop )
 
     def onRefresh(self, data):
         self.remote.refresh()
