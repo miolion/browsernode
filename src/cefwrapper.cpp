@@ -22,7 +22,7 @@ void CEFApp::OnBeforeCommandLineProcessing(
 	// We must disable gpu usage to get good frame-rate when offscreen.
 	cmd->AppendSwitch("disable-gpu");
 	cmd->AppendSwitch("disable-gpu-compositing");
-	cmd->AppendSwitch("enable-begin-frame-scheduling");
+	//cmd->AppendSwitch("enable-begin-frame-scheduling");
 
 	if( mMainInstance )
 	{
