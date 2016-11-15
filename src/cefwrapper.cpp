@@ -171,6 +171,9 @@ void CEFWrapper::Resize( glm::uvec2 size )
 		new avg::Bitmap( glm::vec2((float)size.x, (float)size.y),
 			avg::B8G8R8A8 ) );
 
+	unsigned char* zerobuf = (unsigned char*)calloc( 4, size.x * size.y );
+	mRenderBitmap->setPixels( zerobuf );
+	free( zerobuf );
 
 	(*mBrowser)->GetHost()->WasResized();
 }
