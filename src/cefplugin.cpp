@@ -90,35 +90,35 @@ void CEFNode::preRender(const VertexArrayPtr& pVA, bool bIsParentActive,
 			std::cout << "Tried to prerender with 0 size." << std::endl;
 			return;
 		}
-        setViewport(-32767, -32767, -32767, -32767);
-        m_SurfaceCreated = true;
-        m_LastSize = getSize();
+		setViewport(-32767, -32767, -32767, -32767);
+		m_SurfaceCreated = true;
+		m_LastSize = getSize();
 
-        mWrapper->Resize( glm::uvec2(getWidth(), getHeight()));
+		mWrapper->Resize( glm::uvec2(getWidth(), getHeight()));
 
 		IntPoint size(getWidth(), getHeight());
-        PixelFormat pf = B8G8R8A8;
-        m_pTexture = GLContextManager::get()->createTexture(size, pf, false);
-        getSurface()->create(pf, m_pTexture);
-    }
+		PixelFormat pf = B8G8R8A8;
+		m_pTexture = GLContextManager::get()->createTexture(size, pf, false);
+		getSurface()->create(pf, m_pTexture);
+	}
 
-    RasterNode::preRender(pVA, bIsParentActive, parentEffectiveOpacity);
+	RasterNode::preRender(pVA, bIsParentActive, parentEffectiveOpacity);
 
-    if (isVisible())
+	if (isVisible())
 	{
 		mWrapper->ScheduleTexUpload(m_pTexture);
 		scheduleFXRender();
-    }
+	}
 
-    calcVertexArray(pVA);
+	calcVertexArray(pVA);
 }
 
 static ProfilingZoneID pzid("CEFnode::render");
 
 void CEFNode::render(GLContext* context, const glm::mat4& transform)
 {
-    ScopeTimer Timer(pzid);
-    blt32(context, transform);
+	ScopeTimer Timer(pzid);
+	blt32(context, transform);
 }
 
 static ProfilingZoneID updatepzid("CEFnode::update");
@@ -151,7 +151,7 @@ void CEFNode::cleanup()
 
 bool CEFNode::getTransparent() const
 {
-    return m_Transparent;
+	return m_Transparent;
 }
 
 bool CEFNode::getAudioMuted() const
@@ -252,10 +252,10 @@ char CEFNodeName[] = "CEFnode";
 
 void CEFNode::registerType()
 {
-    avg::TypeDefinition def = avg::TypeDefinition("CEFnode", "rasternode",
-            ExportedObject::buildObject<CEFNode>)
-        .addArg(Arg<bool>("transparent", false, false,
-                offsetof(CEFNode, m_Transparent)))
+	avg::TypeDefinition def = avg::TypeDefinition("CEFnode", "rasternode",
+			ExportedObject::buildObject<CEFNode>)
+		.addArg(Arg<bool>("transparent", false, false,
+				offsetof(CEFNode, m_Transparent)))
 		.addArg(Arg<bool>("mouseInput", false, false,
 				offsetof(CEFNode, m_MouseInput)))
 		.addArg(Arg<bool>("scrollbars", true, false,
@@ -263,8 +263,8 @@ void CEFNode::registerType()
 		.addArg(Arg<double>("volume", 1.0, false,
 				offsetof(CEFNode, m_InitVolume)));
 
-    const char* allowedParentNodeNames[] = {"avg", "div", 0};
-    avg::TypeRegistry::get()->registerType(def, allowedParentNodeNames);
+	const char* allowedParentNodeNames[] = {"avg", "div", 0};
+	avg::TypeRegistry::get()->registerType(def, allowedParentNodeNames);
 }
 
 } // namespace avg
@@ -273,8 +273,8 @@ using namespace avg;
 
 BOOST_PYTHON_MODULE(CEFplugin)
 {
-    class_<CEFNode, bases<RasterNode>, boost::noncopyable>("CEFnode", no_init)
-        .def( "__init__", raw_constructor(createNode<CEFNodeName>) )
+	class_<CEFNode, bases<RasterNode>, boost::noncopyable>("CEFnode", no_init)
+		.def( "__init__", raw_constructor(createNode<CEFNodeName>) )
 		.def( "cleanup", &CEFNode::cleanup ).staticmethod( "cleanup" )
 
 		// Read only
@@ -360,14 +360,14 @@ AVG_PLUGIN_API PyObject* registerPlugin()
 	// Initialize CEF in the main process.
 	CefInitialize(args, settings, app.get(), nullptr);
 
-    avg::CEFNode::registerType();
+	avg::CEFNode::registerType();
 
 #if PY_MAJOR_VERSION < 3
-    initCEFplugin();
-    PyObject* pyCEFModule = PyImport_ImportModule("CEFplugin");
+	initCEFplugin();
+	PyObject* pyCEFModule = PyImport_ImportModule("CEFplugin");
 #else
-    PyObject* pyCEFModule = PyInit_CEFplugin();
+	PyObject* pyCEFModule = PyInit_CEFplugin();
 #endif
 
-    return pyCEFModule;
+	return pyCEFModule;
 }

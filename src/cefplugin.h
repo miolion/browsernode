@@ -44,14 +44,14 @@ namespace avg
 class CEFNode : public RasterNode, public IPreRenderListener
 {
 public:
-    static void registerType();
+	static void registerType();
 	void preprerender();
 
 	// CefWrapper must be in a CefRefPtr for proper cleanup.
 	// Because of this we can't inherit it.
 	CefRefPtr< CEFWrapper > mWrapper;
 
-    CEFNode(const ArgList& Args);
+	CEFNode(const ArgList& Args);
 	virtual ~CEFNode();
 
 	void connectDisplay(); // RasterNode : AreaNode : Node
@@ -70,17 +70,17 @@ public:
 	// IPreRenderListener
 	void onPreRender();
 
-    // Python API
+	// Python API
 
 	// Should be called before application exit.
 	static void cleanup();
 
-    bool getTransparent() const;
+	bool getTransparent() const;
 	bool getAudioMuted() const;
 	int getDebuggerPort() const;
 
 	void setMouseInput(bool mouse);
-    bool getMouseInput() const;
+	bool getMouseInput() const;
 
 	boost::python::object getLoadEndCB() const;
 	void setLoadEndCB( boost::python::object );
@@ -95,7 +95,7 @@ public:
 	double getVolume() const;
 	void setVolume( double vol );
 
-    void sendKeyEvent( KeyEventPtr keyevent );
+	void sendKeyEvent( KeyEventPtr keyevent );
 	void loadURL( std::string url );
 	void refresh();
 	void executeJS( std::string code );
@@ -117,7 +117,7 @@ private:
 	bool m_SurfaceCreated;
 
 	bool m_Transparent;
-    bool m_MouseInput;
+	bool m_MouseInput;
 
 	// Used only to support this setting from constructor.
 	// Doesn't reflect actual value afterwards.

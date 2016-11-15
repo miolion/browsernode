@@ -171,6 +171,7 @@ void CEFWrapper::Resize( glm::uvec2 size )
 		new avg::Bitmap( glm::vec2((float)size.x, (float)size.y),
 			avg::B8G8R8A8 ) );
 
+
 	(*mBrowser)->GetHost()->WasResized();
 }
 
@@ -182,11 +183,11 @@ bool CEFWrapper::GetViewRect(
 }
 
 void CEFWrapper::OnPaint( CefRefPtr<CefBrowser> browser,
-                            PaintElementType type,
-                            const RectList &dirtyRects,
-                            const void* buffer,
-                            int width,
-                            int height )
+							PaintElementType type,
+							const RectList &dirtyRects,
+							const void* buffer,
+							int width,
+							int height )
 {
 	if( width != mRenderBitmap->getSize().x ||
 		height != mRenderBitmap->getSize().y )
