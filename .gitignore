@@ -27,3 +27,23 @@
 *.exe
 *.out
 *.app
+
+#MSVC stuff
+*.suo
+*.sdf
+*.opensdf
+*.ipch
+*.tlog
+*.log
+*.manifest
+*.pdb
+*.exp
+*.unsuccessfulbuild
+*.lastbuildstate
+*.cache
+*.rc
+*.idb
+*.res
+
+#CMAKE stuff
+build/*

@@ -1,0 +1,44 @@
+To install this library you are going to need latest libavg and latest
+Chromium Embedded Framework compiled. Refer to their respective docs.
+
+The project uses cmake build system. It is recommended to use cmake-gui
+as you are required to manually set CMAKE paths to libavg and cef directories.
+
+On windows, the usage of the libavg prebuilt dependency package is advised.
+
+
+The process after having libavg and CEF built is as follows:
+
+-run cmake-gui
+-select browsernode directory and build output directory
+-run configure, choose your designated compiler(VS2010 and make recommended)
+-fill in/modify missing elements in the view.
+ Linux:
+	-AVG_BUILD_DIR: AVG build directory.
+
+ Windows: 
+	-AVG_DEPENDENCY_INCLUDE_DIR: AVG dependencies include directory.
+	-AVG_DEPENDENCY_LIBRARIES: AVG dependencies lib directory.
+	-AVG_LIB_PATH: Path to the built avg.lib.
+
+ Both:
+	-CEF_WRAPPER_LIB: Path to libcef_dll_wrapper.a/lib
+	-CEF_DIR: CEF binary release directory from http://opensource.spotify.com/cefbuilds/index.html
+	-AVG_DIR: AVG directory.(Preferably latest source from git)
+
+ Optionally:
+	-RELEASE_DIR: Where output, test files will be copied. Defaults to <build>/Release
+
+-hit configure again. If any errors occur, resolve them based on message.
+-hit generate.
+
+After this you can find project files in your designated binary directory.
+
+All the resource files used by CEF, along with a test python file are included
+in the designated release directory.
+On unix a copy of your python2.7 is also generated, as its necessary as
+otherwise CEF would look for dependencies in /usr/bin/
+
+You can run the test in the Release directory with:
+"./mypy testapp.py" on unix
+"python testapp.py" on windows
